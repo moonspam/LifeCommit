@@ -1,0 +1,93 @@
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+
+android {
+    namespace = "com.lifecommit.app"
+    compileSdk = rootProject.ext.compileSdkVersion
+    buildFeatures {
+        buildConfig true
+    }
+    defaultConfig {
+        applicationId "com.lifecommit.app"
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        versionCode 1
+        versionName "0.1.0"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        aaptOptions {
+             // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
+             // Default: https://android.googlesource.com/platform/frameworks/base/+/282e181b58cf72b6ca770dc7ca5f91f135444502/tools/aapt/AaptAssets.cpp#61
+            ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
+        }
+    }
+    // Release signing: only if android/keystore.properties exists (gitignored; keep the key OUTSIDE the repo).
+    // Without it the release build is simply unsigned, so a fresh clone still builds.
+    def keystoreProps = new Properties()
+    def keystoreFile = rootProject.file("keystore.properties")
+    if (keystoreFile.exists()) keystoreFile.withInputStream { keystoreProps.load(it) }
+    signingConfigs {
+        if (keystoreFile.exists()) {
+            release {
+                storeFile file(keystoreProps["storeFile"])
+                storePassword keystoreProps["storePassword"]
+                keyAlias keystoreProps["keyAlias"]
+                keyPassword keystoreProps["keyPassword"]
+            }
+        }
+    }
+    flavorDimensions "dist"
+    productFlavors {
+        // full: personal build, every collector. oss: public build, usage access only.
+        // separate app id + label "LifeCommit+", so full installs next to oss (own data, own permissions)
+        full { dimension "dist"; applicationIdSuffix ".full" }
+        oss { dimension "dist" }
+    }
+    buildTypes {
+        release {
+            if (keystoreFile.exists()) signingConfig signingConfigs.release
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+repositories {
+    flatDir{
+        dirs '../capacitor-cordova-android-plugins/src/main/libs', 'libs'
+    }
+}
+
+// oss bundles no Google Play services: the generated capacitor.build.gradle adds the @capacitor/geolocation module to
+// every flavor (cap sync rewrites it), so drop it from oss here; src/oss/assets/capacitor.plugins.json leaves its class
+// out of oss's plugin list (Capacitor aborts the whole list on a missing class - lib/ossPlugins.check.ts keeps it in sync)
+configurations.configureEach { if (name.startsWith("oss")) exclude module: "capacitor-geolocation" }
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    implementation "androidx.appcompat:appcompat:$androidxAppCompatVersion"
+    implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
+    implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
+    implementation project(':capacitor-android')
+    testImplementation "junit:junit:$junitVersion"
+    testImplementation "org.json:json:20250517" // real org.json on the JVM (android.jar only has stubs)
+    androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
+    androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
+    implementation project(':capacitor-cordova-android-plugins')
+    fullImplementation "com.google.android.gms:play-services-location:21.2.0" // LifeCommitAccessibilityService (full source set) only
+    // DebugPlugin: 평문 DB 내보내기용 (SQLCipher 복호화 + 암호화된 SharedPreferences 접근)
+    implementation 'net.zetetic:sqlcipher-android:4.10.0@aar'
+    implementation "androidx.sqlite:sqlite:2.4.0"
+    implementation "androidx.security:security-crypto:1.1.0-alpha06"
+}
+
+apply from: 'capacitor.build.gradle'
+
+try {
+    def servicesJSON = file('google-services.json')
+    if (servicesJSON.text) {
+        apply plugin: 'com.google.gms.google-services'
+    }
+} catch(Exception e) {
+    logger.info("google-services.json not found, google-services plugin not applied. Push Notifications won't work")
+}

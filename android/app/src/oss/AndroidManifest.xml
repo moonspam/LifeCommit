@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-permission
+        android:name="android.permission.PACKAGE_USAGE_STATS"
+        tools:ignore="ProtectedPermissions" />
+
+    <!-- Step 6d: the periodic usage job (UsageJobService) survives reboots: JobInfo.setPersisted requires this -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
+    <!-- Daily reminder: reminder notification at 21:00 (settings toggle, default on) -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!-- Normal-level permissions merged in by libraries; unused here, so keep the public APK minimal -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" tools:node="remove" />
+    <uses-permission android:name="android.permission.USE_BIOMETRIC" tools:node="remove" />
+    <uses-permission android:name="android.permission.USE_FINGERPRINT" tools:node="remove" />
+    <uses-permission android:name="android.permission.INTERNET" tools:node="remove" />
+
+    <!-- Resolve launcher app labels without QUERY_ALL_PACKAGES -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
+    </queries>
+
+    <application>
+        <!-- Step 6d: periodic usage collection while the app is closed; same process as the app (one store, one lock) -->
+        <service
+            android:name=".UsageJobService"
+            android:permission="android.permission.BIND_JOB_SERVICE"
+            android:exported="false" />
+    </application>
+</manifest>

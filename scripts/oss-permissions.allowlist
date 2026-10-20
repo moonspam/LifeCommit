@@ -1,0 +1,9 @@
+# Usage access: the only data source of the oss flavor (UsageStatsManager)
+android.permission.PACKAGE_USAGE_STATS
+# Added by androidx core for its own non-exported dynamic receivers (signature-level, app-private)
+com.lifecommit.app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION
+# Step 6d: the periodic usage job is persisted across reboots (JobInfo.setPersisted requires it); normal permission
+android.permission.RECEIVE_BOOT_COMPLETED
+# Daily reminder notification (settings toggle, default on)
+android.permission.POST_NOTIFICATIONS
+

@@ -1,0 +1,14 @@
+dong.geojson - administrative dong (행정동) boundaries used by LifeCommit+ to name places offline.
+
+본 데이터는 통계청 통계지리정보서비스(SGIS, https://sgis.kostat.go.kr)에서 공공누리 제1유형으로 개방한
+행정동 경계를 가공한 것이며(가공: vuski/admdongkor, https://github.com/vuski/admdongkor), CC BY 4.0으로 배포됩니다.
+
+This data is derived from administrative-dong boundaries released by Statistics Korea SGIS
+(https://sgis.kostat.go.kr) under KOGL Type 1, modified by vuski/admdongkor
+(https://github.com/vuski/admdongkor), and distributed under CC BY 4.0
+(https://creativecommons.org/licenses/by/4.0/).
+
+Source version: admdongkor ver20260701 (HangJeongDong_ver20260701.geojson,
+sha256 c01ef44a0eb00978662ba7a6240ccb1da287fb52abd85104a1758969d391132f).
+Further modified for LifeCommit: mapshaper 0.6.102, simplified to 15% of vertices (keep-shapes),
+only the adm_nm property kept, coordinates rounded to 1e-4 degrees. Regenerate with scripts/build-dong.sh.

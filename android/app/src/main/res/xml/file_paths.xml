@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Only what the app shares: the backup JSON (cache/backups, LifeCommitPlugin) and the debug DB export
+     (cache/debug_exports, DebugPlugin - debug builds only). Nothing in external storage. -->
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <cache-path name="backups" path="backups/" />
+    <cache-path name="debug_exports" path="debug_exports/" />
+</paths>

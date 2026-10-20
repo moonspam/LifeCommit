@@ -1,0 +1,16 @@
+{
+  "name": "LifeCommit",
+  "short_name": "LifeCommit",
+  "description": "Local-first life logging app with Git-style history",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0d1117",
+  "theme_color": "#0d1117",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    }
+  ]
+}

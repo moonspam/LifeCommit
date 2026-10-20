@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">LifeCommit</string>
+    <string name="title_activity_main">LifeCommit</string>
+    <string name="package_name">com.lifecommit.app</string>
+    <string name="custom_url_scheme">com.lifecommit.app</string>
+    <string name="accessibility_description">LifeCommit 일상 로그 트래킹을 위한 접근성 서비스입니다.</string>
+
+</resources>

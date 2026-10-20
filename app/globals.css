@@ -1,0 +1,198 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #0d1117;
+  --surface: #161b22;
+  --border: #30363d;
+  --green: #39d353;
+  --green-dim: #26a641;
+  --red: #f78166;
+  --blue: #79c0ff;
+  --yellow: #e3b341;
+  --purple: #d2a8ff;
+  --gray: #8b949e;
+  --white: #c9d1d9;
+}
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+  background-color: var(--bg);
+  color: var(--white);
+  font-family: var(--font-fira), monospace;
+  font-size: 14px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 스크롤바 스타일 */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--surface);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--gray);
+}
+
+/* 터미널 텍스트 유틸리티 */
+.text-commit-green { color: var(--green); }
+.text-commit-red   { color: var(--red); }
+.text-commit-blue  { color: var(--blue); }
+.text-commit-yellow { color: var(--yellow); }
+.text-commit-purple { color: var(--purple); }
+.text-commit-gray  { color: var(--gray); }
+
+/* 커서 깜빡임 */
+.cursor-blink::after {
+  content: '█';
+  color: var(--green);
+  animation: blink 1s step-end infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* 깃 그래프 패널 */
+.git-graph-panel {
+  background: var(--bg);
+  border-right: 1px solid var(--border);
+  overflow: hidden;
+}
+
+/* 터미널 패널 */
+.terminal-panel {
+  background: var(--surface);
+  overflow-y: auto;
+}
+
+/* 커밋 노드 hover */
+.commit-node:hover {
+  filter: brightness(1.3);
+  cursor: pointer;
+}
+
+/* Git 브랜치 색상 */
+.branch-main     { color: var(--green); }
+.branch-transit  { color: var(--yellow); }
+.branch-gaming   { color: var(--purple); }
+.branch-call     { color: var(--blue); }
+
+/* 분할 레이아웃 공통 */
+.split-layout {
+  display: flex;
+  overflow: hidden;
+  height: 100%;
+}
+
+/* 리사이즈 구분선 (Divider) */
+.resize-divider {
+  width: 4px;
+  background: var(--border);
+  cursor: col-resize;
+  transition: background 0.2s, box-shadow 0.2s;
+  z-index: 10;
+  position: relative;
+}
+.resize-divider:hover, .resize-divider.is-dragging {
+  background: var(--blue);
+  box-shadow: 0 0 10px var(--blue);
+}
+
+@media (orientation: landscape) and (min-width: 1024px) {
+  .split-layout {
+    flex-direction: row;
+  }
+}
+
+@media (orientation: portrait), (max-width: 1023px) {
+  .split-layout {
+    flex-direction: column;
+  }
+  .resize-divider {
+    display: none; /* 모바일에서는 리사이즈 비활성 */
+  }
+  .git-graph-panel {
+    flex: 1 !important; /* 모바일에서는 높이 자동 */
+    border-right: none !important;
+    border-bottom: 1px solid var(--border);
+  }
+  .terminal-panel {
+    flex: 0 0 40% !important; /* 모바일 높이 2/5 (40%)로 상향 */
+    height: 40% !important;
+  }
+  .ask-panel {
+    position: absolute !important;
+    inset: 0 !important;
+    z-index: 30 !important;
+    height: 100% !important;
+    flex: 1 1 100% !important;
+    background-color: var(--bg) !important;
+  }
+}
+
+/* 유니코드 그래프 텍스트 톤 */
+.unicode-graph {
+  font-family: var(--font-fira), monospace;
+  line-height: 1.1;
+  letter-spacing: -0.05em;
+  white-space: pre;
+  user-select: none;
+}
+
+/* 화려한 효과 제거 및 담백한 배지 */
+.branch-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0px 6px;
+  border-radius: 4px;
+  font-size: 9px;
+  font-weight: 700;
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  white-space: nowrap;
+  text-transform: uppercase;
+}
+
+/* 반응형 텍스트 숨김 (모바일) */
+@media (max-width: 640px) {
+  .hide-mobile {
+    display: none !important;
+  }
+}
+
+/* 가로 스크롤바 커스텀 */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Toast 팝업 애니메이션 */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in {
+  animation: fadeIn 0.2s ease-out;
+}
+

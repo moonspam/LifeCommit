@@ -1,0 +1,34 @@
+# LifeGit Log - Dependencies
+node_modules/
+.next/
+out/
+*.local
+
+# Environment
+.env
+.env.local
+
+# Build
+*.tsbuildinfo
+
+# Debug data
+db_dumps/
+*.db
+
+# macOS System Files
+.DS_Store
+
+# Captured device logs / scratch files (may contain personal data)
+logcat_*.txt
+test_sqlcipher.java
+
+# Release signing (never commit keys or their passwords)
+*.jks
+*.keystore
+keystore.properties
+
+# Local CodeGraph index
+.codegraph/
+
+# Android Studio project settings (machine/device specific)
+android/.idea/
