@@ -22,6 +22,19 @@ import {
 } from "@/lib/replay";
 import { dongAt, loadDongs, type Dong } from "@/lib/dong";
 import { useBackClose } from "@/lib/back";
+import LifeCommitPlugin from "@/plugins/LifeCommitPlugin";
+import {
+  SHARE_CHUNK_SIZE,
+  selectSupportedVideoMimeType,
+  calcExpectedVideoDurationSec,
+  makeEvenDimension,
+  chunkBinary,
+  uint8ArrayToBase64,
+  generateShareMediaId,
+  makeReplayVideoFilename,
+  drawReplayOverlay,
+} from "@/lib/replayVideo";
+import { dateKey } from "@/lib/today";
 
 export { PLAY_SEC_PER_WEIGHT, MAX_PLAY_SEC };
 
@@ -45,7 +58,67 @@ export interface ReplayViewProps {
 }
 
 export default function ReplayView({ commits, start, end, periodKey, multiDay, title, onClose }: ReplayViewProps) {
-  useBackClose(true, onClose);
+  const [toast, setToast] = useState<{ message: string; isError?: boolean } | null>(null);
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const showToast = (message: string, isError = false) => {
+    setToast({ message, isError });
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    toastTimerRef.current = setTimeout(() => setToast(null), 2500);
+  };
+
+  const [recordingState, setRecordingState] = useState<{
+    mode: "share" | "save";
+    elapsedSec: number;
+    expectedSec: number;
+    sending?: boolean;
+  } | null>(null);
+  const isRecording = Boolean(recordingState);
+
+  const [supportedMime] = useState<string | null>(() => selectSupportedVideoMimeType());
+
+  // one export at a time; cancel is allowed only while recording. Once sending starts the attempt runs to the end
+  // (or stops at the next chunk after unmount), so an old attempt can never touch a newer one
+  const attemptRef = useRef<{ cancelled: boolean; sending: boolean } | null>(null);
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const recRafRef = useRef<number>(0);
+  const recStreamRef = useRef<MediaStream | null>(null);
+
+  const cancelRecording = () => {
+    const attempt = attemptRef.current;
+    if (!attempt || attempt.sending || attempt.cancelled) return;
+    attempt.cancelled = true;
+    if (recRafRef.current) cancelAnimationFrame(recRafRef.current);
+    if (recorderRef.current && recorderRef.current.state !== "inactive") {
+      try {
+        recorderRef.current.stop();
+      } catch (_) {}
+    }
+    if (recStreamRef.current) {
+      recStreamRef.current.getTracks().forEach((t) => t.stop());
+    }
+    showToast("녹화를 취소했습니다");
+  };
+
+  useEffect(() => {
+    return () => {
+      if (attemptRef.current) attemptRef.current.cancelled = true;
+      if (recRafRef.current) cancelAnimationFrame(recRafRef.current);
+      if (recorderRef.current && recorderRef.current.state !== "inactive") {
+        try {
+          recorderRef.current.stop();
+        } catch (_) {}
+      }
+      if (recStreamRef.current) {
+        recStreamRef.current.getTracks().forEach((t) => t.stop());
+      }
+    };
+  }, []);
+
+  useBackClose(true, () => {
+    cancelRecording();
+    onClose();
+  });
   const rangeStart = start;
   const rangeEnd = end;
   const key = periodKey;
@@ -266,11 +339,269 @@ export default function ReplayView({ commits, start, end, periodKey, multiDay, t
     setPlaying((p) => !p);
   };
 
+  const handleVideoExport = async (mode: "share" | "save") => {
+    if (attemptRef.current || !supportedMime || total === 0) return;
+    const canvas = canvasRef.current;
+    if (!canvas || canvas.clientWidth === 0 || canvas.clientHeight === 0) {
+      showToast("리플레이 화면이 준비되지 않았습니다.", true);
+      return;
+    }
+
+    const actionText = mode === "share" ? "공유할까요?" : "저장할까요?";
+    const totalPlaySec = total * secPerWeight;
+    const expectedSec = calcExpectedVideoDurationSec(totalPlaySec, speed);
+    const confirmed = confirm(
+      `이 영상에는 이동 경로(집·회사 위치 등)가 담깁니다(약 ${expectedSec}초 녹화). ${actionText}`
+    );
+    if (!confirmed) return;
+
+    const attempt = { cancelled: false, sending: false };
+    attemptRef.current = attempt;
+    setPlaying(false);
+    setProgress(0);
+
+    // up to 2x the CSS size so the video stays sharp; the overlay is drawn in CSS units
+    const recScale = Math.min(window.devicePixelRatio || 1, 2);
+    const recW = makeEvenDimension(canvas.clientWidth * recScale);
+    const recH = makeEvenDimension(canvas.clientHeight * recScale);
+    const recCanvas = document.createElement("canvas");
+    recCanvas.width = recW;
+    recCanvas.height = recH;
+    const recCtx = recCanvas.getContext("2d");
+    if (!recCtx) {
+      attemptRef.current = null;
+      showToast("녹화 캔버스를 생성할 수 없습니다.", true);
+      return;
+    }
+
+    let stream: MediaStream;
+    try {
+      stream = recCanvas.captureStream(30);
+      recStreamRef.current = stream;
+    } catch (err: any) {
+      attemptRef.current = null;
+      showToast(`녹화 스트림 생성 실패: ${err?.message || err}`, true);
+      return;
+    }
+
+    const recordedChunks: Blob[] = [];
+    let recorder: MediaRecorder;
+    try {
+      recorder = new MediaRecorder(stream, {
+        mimeType: supportedMime,
+        videoBitsPerSecond: 2_000_000,
+      });
+      recorderRef.current = recorder;
+    } catch (err: any) {
+      stream.getTracks().forEach((t) => t.stop());
+      attemptRef.current = null;
+      showToast(`MediaRecorder 초기화 실패: ${err?.message || err}`, true);
+      return;
+    }
+
+    recorder.ondataavailable = (e) => {
+      if (e.data && e.data.size > 0) {
+        recordedChunks.push(e.data);
+      }
+    };
+
+    setRecordingState({
+      mode,
+      elapsedSec: 0,
+      expectedSec,
+    });
+
+    const recordFinishedPromise = new Promise<Blob | null>((resolve) => {
+      recorder.onstop = () => {
+        if (attempt.cancelled) {
+          resolve(null);
+        } else {
+          resolve(new Blob(recordedChunks, { type: supportedMime }));
+        }
+      };
+    });
+
+    recorder.start();
+
+    let currentProgress = 0;
+    let lastTime = performance.now();
+    const startTime = lastTime;
+    let reachedEndTime: number | null = null;
+
+    const tick = (now: number) => {
+      if (attempt.cancelled) return;
+      const dt = (now - lastTime) / 1000;
+      lastTime = now;
+
+      const elapsed = Math.floor((now - startTime) / 1000);
+      setRecordingState((prev) => (prev ? { ...prev, elapsedSec: elapsed } : null));
+
+      let isDone = false;
+      if (reachedEndTime !== null) {
+        if (now - reachedEndTime >= 1000) {
+          isDone = true;
+        }
+      } else {
+        const { nextProgress, reachedEnd } = advanceReplay(
+          currentProgress,
+          dt,
+          speed,
+          secPerWeight,
+          total
+        );
+        currentProgress = nextProgress;
+        setProgress(currentProgress);
+        if (reachedEnd) {
+          reachedEndTime = now;
+        }
+      }
+
+      const sourceCanvas = canvasRef.current;
+      if (sourceCanvas) {
+        recCtx.setTransform(1, 0, 0, 1, 0, 0);
+        recCtx.drawImage(sourceCanvas, 0, 0, recW, recH);
+        recCtx.setTransform(recScale, 0, 0, recScale, 0, 0);
+        const isFull = reachedEndTime !== null || currentProgress >= total;
+        const curAt = playheadAt(replay, steps, currentProgress);
+        const timeText = isFull
+          ? isMultiDay
+            ? "기간 전체"
+            : "하루 전체"
+          : `${formatReplayClock(curAt.time, isMultiDay)}${curAt.point === null ? " · 위치 확인 불가" : ""}`;
+        drawReplayOverlay(recCtx, {
+          width: recW / recScale,
+          height: recH / recScale,
+          timeText,
+          title: displayTitle,
+        });
+      }
+
+      if (isDone) {
+        try {
+          if (recorder.state !== "inactive") {
+            recorder.stop();
+          }
+        } catch (_) {}
+      } else {
+        recRafRef.current = requestAnimationFrame(tick);
+      }
+    };
+
+    recRafRef.current = requestAnimationFrame(tick);
+
+    // frames stop while the screen is off or the app is in the background, so the video would freeze: cancel instead
+    const onHidden = () => { if (document.hidden) cancelRecording(); };
+    document.addEventListener("visibilitychange", onHidden);
+    const videoBlob = await recordFinishedPromise;
+    document.removeEventListener("visibilitychange", onHidden);
+    stream.getTracks().forEach((t) => t.stop());
+
+    const finish = () => {
+      if (attemptRef.current === attempt) attemptRef.current = null;
+      setRecordingState(null);
+    };
+    if (!videoBlob || attempt.cancelled) return finish();
+    if (videoBlob.size === 0) {
+      finish();
+      showToast("녹화된 영상이 비어 있습니다. 다시 시도해 주세요.", true);
+      return;
+    }
+
+    attempt.sending = true;
+    setRecordingState((prev) => (prev ? { ...prev, sending: true } : null));
+    const shareId = generateShareMediaId();
+
+    try {
+      const chunks = chunkBinary(new Uint8Array(await videoBlob.arrayBuffer()), SHARE_CHUNK_SIZE);
+      for (const chunk of chunks) {
+        // only an unmount sets this now; the same loop removes its own .part, so nothing races with it
+        if (attempt.cancelled) {
+          await LifeCommitPlugin.cancelShareMedia({ id: shareId }).catch(() => {});
+          return finish();
+        }
+        await LifeCommitPlugin.appendShareChunk({ id: shareId, base64: uint8ArrayToBase64(chunk) });
+      }
+      if (attempt.cancelled) {
+        await LifeCommitPlugin.cancelShareMedia({ id: shareId }).catch(() => {});
+        return finish();
+      }
+
+      const startDateStr = dateKey(new Date(rangeStart));
+      const endDateStr = dateKey(new Date(rangeEnd));
+      const filename = makeReplayVideoFilename(
+        isMultiDay ? { start: startDateStr, end: endDateStr } : startDateStr
+      );
+      await LifeCommitPlugin.finishShareMedia({ id: shareId, filename, mime: "video/mp4", mode });
+      finish();
+      showToast(mode === "save" ? "동영상에 저장했습니다" : "공유 창을 열었습니다");
+    } catch (err: any) {
+      await LifeCommitPlugin.cancelShareMedia({ id: shareId }).catch(() => {});
+      finish();
+      showToast(err?.message || "영상 처리 실패", true);
+    }
+  };
+
   return <div className="fixed inset-0 z-50 flex flex-col bg-terminal-bg font-mono text-xs">
     <div className="shrink-0 flex items-center justify-between p-3 border-b border-terminal-border">
       <strong className="text-terminal-white">{displayTitle}</strong>
-      <button onClick={onClose} className="px-3 py-1.5 border border-terminal-border rounded text-terminal-blue">닫기</button>
+      <div className="flex items-center gap-2">
+        {replay.stops.length > 0 && supportedMime && (
+          isRecording ? (
+            <div className="flex items-center gap-2 text-xs">
+              <span className="text-terminal-yellow font-bold animate-pulse">
+                {recordingState?.sending
+                  ? "저장 중..."
+                  : `녹화 중 ${recordingState?.elapsedSec}/${recordingState?.expectedSec}초`}
+              </span>
+              {!recordingState?.sending && <button
+                type="button"
+                onClick={cancelRecording}
+                className="px-2 py-1 rounded-sm border border-terminal-red/40 bg-terminal-red/10 text-terminal-red hover:bg-terminal-red/20 transition-all font-bold cursor-pointer"
+              >
+                취소
+              </button>}
+            </div>
+          ) : (
+            <div className="flex items-center gap-1 font-mono select-none">
+              <button
+                type="button"
+                onClick={() => handleVideoExport("share")}
+                className="px-2 py-1 text-xs rounded-sm bg-terminal-surface hover:bg-[#21262d] border border-terminal-border text-terminal-white hover:text-white transition-all cursor-pointer"
+                title="영상 공유"
+              >
+                영상 공유
+              </button>
+              <button
+                type="button"
+                onClick={() => handleVideoExport("save")}
+                className="px-2 py-1 text-xs rounded-sm bg-terminal-surface hover:bg-[#21262d] border border-terminal-border text-terminal-white hover:text-white transition-all cursor-pointer"
+                title="동영상(갤러리)에 저장"
+              >
+                영상 저장
+              </button>
+            </div>
+          )
+        )}
+        <button
+          onClick={onClose}
+          disabled={isRecording}
+          className="px-3 py-1.5 border border-terminal-border rounded-sm text-terminal-blue disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          닫기
+        </button>
+      </div>
     </div>
+    {toast && (
+      <div
+        className={`px-3 py-1.5 text-xs font-mono border-b flex items-center justify-between transition-all ${
+          toast.isError
+            ? "bg-terminal-red/10 border-terminal-red/40 text-terminal-red"
+            : "bg-terminal-green/10 border-terminal-green/40 text-terminal-green"
+        }`}
+      >
+        <span>{toast.message}</span>
+      </div>
+    )}
     {replay.stops.length === 0
       ? <div className="flex-1 flex items-center justify-center text-terminal-gray">{isMultiDay ? "이 기간의 위치 기록이 없습니다." : "이날의 위치 기록이 없습니다."}</div>
       : <div className="flex-1 min-h-0 relative">
@@ -279,20 +610,40 @@ export default function ReplayView({ commits, start, end, periodKey, multiDay, t
       </div>}
     {replay.stops.length > 0 && <div className="shrink-0 p-3 space-y-2 border-t border-terminal-border">
       <div className="flex items-center gap-3">
-        <button onClick={play} className="px-3 py-1.5 rounded bg-terminal-green text-black font-bold">{playing ? "일시정지" : "▶ 재생"}</button>
+        <button
+          onClick={play}
+          disabled={isRecording}
+          className="px-3 py-1.5 rounded-sm bg-terminal-green text-black font-bold disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          {playing ? "일시정지" : "▶ 재생"}
+        </button>
         <button
           type="button"
+          disabled={isRecording}
           onClick={() => {
             const next = changeReplaySpeed({ speed, progress });
             setSpeed(next.speed);
             setProgress(next.progress);
           }}
           aria-label={`재생 배속 ${speed}×`}
-          className="px-2.5 py-1.5 rounded border border-terminal-border text-terminal-white hover:bg-terminal-surface font-bold text-xs shrink-0"
+          className="px-2.5 py-1.5 rounded-sm border border-terminal-border text-terminal-white hover:bg-terminal-surface font-bold text-xs shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
         >
           {speed}×
         </button>
-        <input type="range" min={0} max={total} step={0.01} value={progress} onChange={(e) => { setPlaying(false); setProgress(Number(e.target.value)); }} className="flex-1" aria-label="재생 위치" />
+        <input
+          type="range"
+          min={0}
+          max={total}
+          step={0.01}
+          value={progress}
+          disabled={isRecording}
+          onChange={(e) => {
+            setPlaying(false);
+            setProgress(Number(e.target.value));
+          }}
+          className="flex-1 disabled:opacity-40 disabled:cursor-not-allowed"
+          aria-label="재생 위치"
+        />
       </div>
       <p className="text-[10px] text-terminal-gray/80 leading-relaxed">
         추정 경로: 몇 분 간격의 위치 기록을 직선으로 이었습니다(실제 길과 다를 수 있음). 점선은 기록이 끊긴 구간(폰 꺼짐 등)입니다. 지도는 기기 안의 행정동 경계로만 그리며 네트워크를 쓰지 않습니다.

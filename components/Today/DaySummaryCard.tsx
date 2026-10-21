@@ -34,10 +34,10 @@ export default function DaySummaryCard({ date, todayKey, summary, flavor = "full
       <div className="grid grid-cols-[4.5em_minmax(0,1fr)] gap-x-2 gap-y-1 text-xs items-baseline">
         {/* 상위 앱 */}
         <span className="text-terminal-gray text-[11px]">상위 앱</span>
-        <div className="text-terminal-white flex flex-wrap gap-1 min-w-0 [overflow-wrap:anywhere]">
+        <div className="text-terminal-white flex flex-wrap gap-1 min-w-0 wrap-anywhere">
           {summary.topApps.length > 0 ? (
             summary.topApps.map((app, i) => (
-              <span key={i} className="inline-block bg-terminal-bg/60 border border-terminal-border/50 rounded px-1.5 py-0.5 text-[11px] text-terminal-white max-w-full">
+              <span key={i} className="inline-block bg-terminal-bg/60 border border-terminal-border/50 rounded-sm px-1.5 py-0.5 text-[11px] text-terminal-white max-w-full">
                 {app.name} {formatDuration(app.durationSec)}
               </span>
             ))
@@ -50,7 +50,7 @@ export default function DaySummaryCard({ date, todayKey, summary, flavor = "full
         {summary.longestSession && (
           <>
             <span className="text-terminal-gray text-[11px]">최장</span>
-            <div className="text-terminal-white text-[11px] min-w-0 [overflow-wrap:anywhere]">
+            <div className="text-terminal-white text-[11px] min-w-0 wrap-anywhere">
               {summary.longestSession.name} {formatDuration(summary.longestSession.durationSec)}
             </div>
           </>
@@ -60,7 +60,7 @@ export default function DaySummaryCard({ date, todayKey, summary, flavor = "full
         {flavor === "full" && (
           <>
             <span className="text-terminal-gray text-[11px]">장소</span>
-            <div className="text-terminal-white text-[11px] min-w-0 [overflow-wrap:anywhere]">
+            <div className="text-terminal-white text-[11px] min-w-0 wrap-anywhere">
               {summary.places.length > 0 ? summary.places.join(" · ") : "기록 없음"}
             </div>
           </>
@@ -70,15 +70,15 @@ export default function DaySummaryCard({ date, todayKey, summary, flavor = "full
       {/* 통화·SMS·사진 (full 전용, 3칸 타일) */}
       {flavor === "full" && (
         <div className="grid grid-cols-3 gap-2 pt-1 border-t border-terminal-border/40 text-center">
-          <div className={`rounded bg-terminal-bg/40 p-1.5 ${summary.calls === 0 ? "opacity-40" : ""}`}>
+          <div className={`rounded-sm bg-terminal-bg/40 p-1.5 ${summary.calls === 0 ? "opacity-40" : ""}`}>
             <div className="text-[10px] text-terminal-gray">통화</div>
             <div className="text-sm font-bold text-terminal-white">{summary.calls}</div>
           </div>
-          <div className={`rounded bg-terminal-bg/40 p-1.5 ${summary.sms === 0 ? "opacity-40" : ""}`}>
+          <div className={`rounded-sm bg-terminal-bg/40 p-1.5 ${summary.sms === 0 ? "opacity-40" : ""}`}>
             <div className="text-[10px] text-terminal-gray">SMS</div>
             <div className="text-sm font-bold text-terminal-white">{summary.sms}</div>
           </div>
-          <div className={`rounded bg-terminal-bg/40 p-1.5 ${summary.photos === 0 ? "opacity-40" : ""}`}>
+          <div className={`rounded-sm bg-terminal-bg/40 p-1.5 ${summary.photos === 0 ? "opacity-40" : ""}`}>
             <div className="text-[10px] text-terminal-gray">사진</div>
             <div className="text-sm font-bold text-terminal-white">{summary.photos}</div>
           </div>
@@ -93,7 +93,7 @@ export default function DaySummaryCard({ date, todayKey, summary, flavor = "full
 
       {/* 수집 확인 불가 줄: 맨 아래 노란 글씨 */}
       {gaps.length > 0 && (
-        <div className="text-terminal-yellow text-[11px] pt-1 [overflow-wrap:anywhere]">
+        <div className="text-terminal-yellow text-[11px] pt-1 wrap-anywhere">
           수집 확인 불가 {gaps.map((g) => `${hhmm(g.from)}–${hhmm(g.to)} (${reasonLabel(g.reason)})`).join(" · ")}
         </div>
       )}

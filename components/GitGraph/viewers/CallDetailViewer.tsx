@@ -62,7 +62,7 @@ export default function CallDetailViewer({ body }: CallDetailViewerProps) {
       </div>
 
       <div className={`flex items-center gap-3 p-2.5 border ${typeBorder} ${typeBg} rounded-xl mt-1`}>
-        <div className="text-sm shrink-0 w-7 h-7 rounded-full bg-[#161b22] border border-terminal-border/60 flex items-center justify-center">
+        <div className="text-sm shrink-0 w-7 h-7 rounded-full bg-terminal-surface border border-terminal-border/60 flex items-center justify-center">
           {typeIcon}
         </div>
         <div className="flex-1 min-w-0">

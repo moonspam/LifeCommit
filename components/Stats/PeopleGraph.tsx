@@ -130,7 +130,7 @@ export function PeopleGraphView({ people, withUnsaved, selectedKey, periodLabel,
         <div className="flex items-center gap-2.5">
           {avatar(selected, "h-9 w-9 text-sm")}
           <div className="min-w-0">
-            <div className="break-words text-sm font-semibold">{labels.get(selected.key)?.full ?? selected.name}
+            <div className="wrap-break-word text-sm font-semibold">{labels.get(selected.key)?.full ?? selected.name}
               {selected.tag && <span className="ml-2 text-xs" style={{ color: colorOf(selected) }}>{selected.tag}</span>}</div>
             <div className="text-[11px] text-terminal-gray">마지막 연락 · {lastTime(selected.lastAt)} ({lastKind[selected.lastKind]})</div>
           </div>

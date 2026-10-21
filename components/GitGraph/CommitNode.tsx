@@ -63,9 +63,9 @@ export default function CommitNode({
         </div>
 
         {/* 메타 정보 (브랜치명 배지, 시간, 소요시간) */}
-        <div className="flex items-center gap-2 mt-[1px]">
+        <div className="flex items-center gap-2 mt-px">
           <span
-            className="text-[8px] font-mono font-bold px-[4px] py-[0.5px] rounded uppercase tracking-tight shrink-0"
+            className="text-[8px] font-mono font-bold px-[4px] py-[0.5px] rounded-sm uppercase tracking-tight shrink-0"
             style={{ color, backgroundColor: `${color}12`, border: `1px solid ${color}30` }}
           >
             {branch.name}

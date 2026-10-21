@@ -185,14 +185,14 @@ export default function TerminalPanel({
 
       {/* 명령어 입력 영역 */}
       <div className="flex items-center gap-2 px-4 py-2 bg-terminal-surface border-t border-terminal-border">
-        <span className="text-terminal-green flex-shrink-0">❯</span>
+        <span className="text-terminal-green shrink-0">❯</span>
         <input
           type="text"
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={handleCommand}
           placeholder="git log [--type/--since/--grep] | git status | help"
-          className="flex-1 bg-transparent text-terminal-white placeholder-terminal-gray outline-none caret-terminal-green font-mono text-[11px]"
+          className="flex-1 bg-transparent text-terminal-white placeholder-terminal-gray outline-hidden caret-terminal-green font-mono text-[11px]"
           autoComplete="off"
           spellCheck={false}
         />

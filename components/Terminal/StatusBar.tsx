@@ -139,7 +139,7 @@ export default function StatusBar({
           {/* 설정 버튼 */}
           <button
             onClick={onOpenFilterSettings}
-            className="p-1 rounded text-terminal-gray hover:text-terminal-white border border-terminal-border/60 hover:bg-terminal-surface transition-colors"
+            className="p-1 rounded-sm text-terminal-gray hover:text-terminal-white border border-terminal-border/60 hover:bg-terminal-surface transition-colors"
             title="설정 및 백업/복원"
           >
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -158,14 +158,14 @@ export default function StatusBar({
       {/* ── 2단: 서브 컨트롤 바 (기간 필터 탭 + 보안 뱃지 + DB Export) ── */}
       <div className="flex items-center justify-between px-3.5 py-1.5 bg-[#090b10] text-[10px] sm:text-xs">
         {/* 좌측: 기간 필터 탭 바 (모바일 터치 최적화) */}
-        <div className="flex items-center gap-1 bg-[#12151c] p-0.5 rounded border border-terminal-border/40">
+        <div className="flex items-center gap-1 bg-[#12151c] p-0.5 rounded-sm border border-terminal-border/40">
           {(["today", "week", "month", "year"] as const).map((type) => (
             <button
               key={type}
               onClick={() => onFilterChange(type)}
               className={`px-2.5 py-1 rounded text-[10px] uppercase font-bold tracking-wider transition-all ${
                 filterType === type
-                  ? "bg-terminal-green/20 text-terminal-green border border-terminal-green/40 shadow-sm"
+                  ? "bg-terminal-green/20 text-terminal-green border border-terminal-green/40 shadow-xs"
                   : "text-terminal-gray hover:text-terminal-white hover:bg-terminal-surface/40"
               }`}
             >

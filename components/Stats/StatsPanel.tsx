@@ -113,9 +113,9 @@ export default function StatsPanel({ filterType, onDayClick, resumeTick, isReady
         />
       )}
       <div className="flex items-center justify-between gap-2 border-b border-terminal-border pb-4 shrink-0">
-        <button aria-label="이전" onClick={() => setAnchor(shiftPeriodStart(filterType, anchor, -1))} className="shrink-0 whitespace-nowrap px-3 py-1.5 border border-terminal-border rounded text-terminal-blue font-mono text-xs">←</button>
+        <button aria-label="이전" onClick={() => setAnchor(shiftPeriodStart(filterType, anchor, -1))} className="shrink-0 whitespace-nowrap px-3 py-1.5 border border-terminal-border rounded-sm text-terminal-blue font-mono text-xs">←</button>
         <span className="text-terminal-blue text-[13px] font-mono font-bold text-center min-w-0">📊 {title}</span>
-        <button aria-label="다음" disabled={!canNext} onClick={() => setAnchor(shiftPeriodStart(filterType, anchor, 1))} className="shrink-0 whitespace-nowrap px-3 py-1.5 border border-terminal-border rounded text-terminal-blue font-mono text-xs disabled:opacity-30">→</button>
+        <button aria-label="다음" disabled={!canNext} onClick={() => setAnchor(shiftPeriodStart(filterType, anchor, 1))} className="shrink-0 whitespace-nowrap px-3 py-1.5 border border-terminal-border rounded-sm text-terminal-blue font-mono text-xs disabled:opacity-30">→</button>
       </div>
 
       {flavor === "full" && (
@@ -126,7 +126,7 @@ export default function StatsPanel({ filterType, onDayClick, resumeTick, isReady
 
       {filterType !== 'week' && (
       <div className="flex flex-col gap-2">
-        <h3 className="text-terminal-white/80 font-mono text-sm tracking-wide">Contributions</h3>
+        <h3 className="text-terminal-white/80 font-mono text-sm tracking-wide">폰 사용시간</h3>
         <ContributionGraph 
           year={anchor.getFullYear()} 
           month={isMonthMode ? anchor.getMonth() + 1 : undefined}

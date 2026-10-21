@@ -90,9 +90,9 @@ export default function TodayPanel({ isReady, resumeTick, date, onDateChange, on
     {replayOpen && replayReady(aroundDate, date) && <ReplayView key={date} commits={around} start={dayStart} end={dayEnd} periodKey={date} multiDay={false} title={`${date.replaceAll("-", ". ")} 이동 리플레이`} onClose={() => setReplayOpen(false)} />}
     <div className="shrink-0 p-3 space-y-2">
       <div className="flex items-center justify-between">
-        <button aria-label="이전" onClick={() => shift(-1)} className="shrink-0 whitespace-nowrap px-3 py-1.5 border border-terminal-border rounded text-terminal-blue font-mono text-xs">←</button>
+        <button aria-label="이전" onClick={() => shift(-1)} className="shrink-0 whitespace-nowrap px-3 py-1.5 border border-terminal-border rounded-sm text-terminal-blue font-mono text-xs">←</button>
         <strong className="text-terminal-white">{date.replaceAll("-", ". ")}</strong>
-        <button aria-label="다음" disabled={date >= today} onClick={() => shift(1)} className="shrink-0 whitespace-nowrap px-3 py-1.5 border border-terminal-border rounded text-terminal-blue font-mono text-xs disabled:opacity-30">→</button>
+        <button aria-label="다음" disabled={date >= today} onClick={() => shift(1)} className="shrink-0 whitespace-nowrap px-3 py-1.5 border border-terminal-border rounded-sm text-terminal-blue font-mono text-xs disabled:opacity-30">→</button>
       </div>
       {flavor === "full" && commits.some((c) => c.eventType === "LOCATION") && (
         <div className="flex justify-end shrink-0">
@@ -106,14 +106,14 @@ export default function TodayPanel({ isReady, resumeTick, date, onDateChange, on
       <summary className="text-terminal-yellow font-bold cursor-pointer">분류 안 된 앱 {unclassified.length}개 <span className="text-terminal-gray font-normal">· 전체 기간</span></summary>
       <div className="mt-2 max-h-40 overflow-y-auto space-y-2">
         {unclassified.map((app) => (
-          <div key={app.pkg} className="rounded border border-terminal-border p-2 flex flex-col gap-1.5">
+          <div key={app.pkg} className="rounded-sm border border-terminal-border p-2 flex flex-col gap-1.5">
             <div className="text-terminal-white">{app.name} · {formatDuration(app.durationSec)}</div>
             <div className="flex flex-wrap gap-1.5">
               {branches.filter((b) => b.id !== 1 && b.name !== "main").sort((x, y) => getBranchOrderIndex(x.name) - getBranchOrderIndex(y.name)).map((branch) => (
                 <button
                   key={branch.id}
                   onClick={() => classify(app.pkg, branch.id)}
-                  className="px-2 py-1 border rounded"
+                  className="px-2 py-1 border rounded-sm"
                   style={{ color: branch.color, borderColor: branch.color }}
                 >
                   {branch.name.replace("feature/", "")}
@@ -125,8 +125,8 @@ export default function TodayPanel({ isReady, resumeTick, date, onDateChange, on
       </div>
     </details>}
     <div className="shrink-0 p-3 bg-terminal-bg border-t border-terminal-border flex gap-2">
-      <input value={memo} onChange={(e) => setMemo(e.target.value)} onKeyDown={(e) => e.key === "Enter" && saveMemo()} placeholder="오늘의 한 줄" className="min-w-0 flex-1 bg-terminal-surface border border-terminal-border rounded px-3 py-2 text-terminal-white outline-none"/>
-      <button onClick={saveMemo} className="px-3 rounded bg-terminal-green text-black font-bold">저장</button>
+      <input value={memo} onChange={(e) => setMemo(e.target.value)} onKeyDown={(e) => e.key === "Enter" && saveMemo()} placeholder="오늘의 한 줄" className="min-w-0 flex-1 bg-terminal-surface border border-terminal-border rounded-sm px-3 py-2 text-terminal-white outline-hidden"/>
+      <button onClick={saveMemo} className="px-3 rounded-sm bg-terminal-green text-black font-bold">저장</button>
     </div>
   </section>;
 }

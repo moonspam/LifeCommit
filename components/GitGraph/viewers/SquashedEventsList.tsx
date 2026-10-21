@@ -20,7 +20,7 @@ export default function SquashedEventsList({ events }: SquashedEventsListProps) 
         {events.map((ev, si) => (
           <div
             key={si}
-            className="flex items-center justify-between text-[10px] text-terminal-white/80 font-mono bg-terminal-surface/30 px-1.5 py-0.5 rounded"
+            className="flex items-center justify-between text-[10px] text-terminal-white/80 font-mono bg-terminal-surface/30 px-1.5 py-0.5 rounded-sm"
           >
             <span className="truncate pr-2">{ev.note || ev.pkg}</span>
             <span className="text-terminal-gray/50 shrink-0">{ev.durationSec}s</span>

@@ -257,7 +257,7 @@ async function testBranches() {
   const cardHtml = renderToStaticMarkup(
     createElement(
       "div",
-      { className: "rounded border border-terminal-border p-2 flex flex-col gap-1.5" },
+      { className: "rounded-sm border border-terminal-border p-2 flex flex-col gap-1.5" },
       createElement("div", { className: "text-terminal-white" }, `${unclassifiedApp.name} · 2m 30s`),
       createElement(
         "div",
@@ -267,7 +267,7 @@ async function testBranches() {
           .map((branch) =>
             createElement(
               "button",
-              { key: branch.id, className: "px-2 py-1 border rounded", style: { color: branch.color } },
+              { key: branch.id, className: "px-2 py-1 border rounded-sm", style: { color: branch.color } },
               branch.name.replace("feature/", "")
             )
           )

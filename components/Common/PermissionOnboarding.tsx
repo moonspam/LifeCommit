@@ -267,7 +267,7 @@ export default function PermissionOnboarding({ onAllGranted }: { onAllGranted: (
               {!item.granted && (
                 <button
                   onClick={item.action}
-                  className="shrink-0 text-xs px-3 py-1.5 rounded bg-terminal-green/20 hover:bg-terminal-green/30 text-terminal-green border border-terminal-green/40 transition-colors"
+                  className="shrink-0 text-xs px-3 py-1.5 rounded-sm bg-terminal-green/20 hover:bg-terminal-green/30 text-terminal-green border border-terminal-green/40 transition-colors"
                 >
                   설정
                 </button>
@@ -278,7 +278,7 @@ export default function PermissionOnboarding({ onAllGranted }: { onAllGranted: (
 
         <button
           onClick={refresh}
-          className="w-full text-xs py-2 rounded border border-terminal-border hover:bg-terminal-border/30 transition-colors text-terminal-gray"
+          className="w-full text-xs py-2 rounded-sm border border-terminal-border hover:bg-terminal-border/30 transition-colors text-terminal-gray"
         >
           새로고침
         </button>

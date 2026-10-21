@@ -365,7 +365,7 @@ export default function GitGraphPanel({
     <div className="flex flex-col h-full bg-terminal-bg overflow-hidden border-r border-terminal-border relative">
       {/* Toast 알림 */}
       {toastMsg && (
-        <div className="absolute top-12 inset-x-0 mx-auto w-fit z-[100] bg-[#50fa7b] text-black text-xs font-mono font-bold px-4 py-2 rounded-lg shadow-lg animate-fade-in whitespace-nowrap">
+        <div className="absolute top-12 inset-x-0 mx-auto w-fit z-100 bg-[#50fa7b] text-black text-xs font-mono font-bold px-4 py-2 rounded-lg shadow-lg animate-fade-in whitespace-nowrap">
           {toastMsg}
         </div>
       )}
@@ -384,7 +384,7 @@ export default function GitGraphPanel({
         {targetDate && onCloseDate && (
           <button
             onClick={onCloseDate}
-            className="text-[10px] font-mono text-terminal-gray/80 hover:text-terminal-white bg-terminal-bg px-2 py-0.5 rounded border border-terminal-border/50 transition-colors"
+            className="text-[10px] font-mono text-terminal-gray/80 hover:text-terminal-white bg-terminal-bg px-2 py-0.5 rounded-sm border border-terminal-border/50 transition-colors"
           >
             ← TODAY
           </button>

@@ -42,7 +42,7 @@ export default function ReplyDetailViewer({ body }: ReplyDetailViewerProps) {
 
         <div className="flex flex-col items-end max-w-[90%] self-end">
           <span className="text-[9px] text-[#f1e05a]/60 mb-0.5 mr-1">나</span>
-          <div className="bg-[#f1e05a] text-[#0d1117] text-[11px] px-3 py-1.5 rounded-l-xl rounded-br-xl rounded-tr-none font-semibold leading-relaxed break-all whitespace-pre-wrap select-text">
+          <div className="bg-[#f1e05a] text-terminal-bg text-[11px] px-3 py-1.5 rounded-l-xl rounded-br-xl rounded-tr-none font-semibold leading-relaxed break-all whitespace-pre-wrap select-text">
             {replyData.replyMsg || ""}
           </div>
         </div>

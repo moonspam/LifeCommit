@@ -434,7 +434,7 @@ export default function AskPanel({ isReady, onClose }: AskPanelProps) {
         </div>
         <button
           onClick={onClose}
-          className="text-terminal-gray hover:text-terminal-white p-1 rounded hover:bg-terminal-border/40 transition-colors"
+          className="text-terminal-gray hover:text-terminal-white p-1 rounded-sm hover:bg-terminal-border/40 transition-colors"
           title={UI_TEXT.closeButton}
         >
           ✕
@@ -444,7 +444,7 @@ export default function AskPanel({ isReady, onClose }: AskPanelProps) {
       {/* 메인 스크롤 콘텐츠 */}
       <div className="flex-1 overflow-y-auto px-3 py-2.5 space-y-3 scrollbar-hide text-terminal-white">
         {/* ── 빌더 폼 ── */}
-        <div className="bg-[#10131a] border border-terminal-border/80 rounded p-2.5 space-y-2.5">
+        <div className="bg-[#10131a] border border-terminal-border/80 rounded-sm p-2.5 space-y-2.5">
           {/* 1. 언제 */}
           <div className="space-y-1">
             <span className="text-[10px] text-terminal-gray font-bold">{UI_TEXT.sectionWhen}</span>
@@ -470,14 +470,14 @@ export default function AskPanel({ isReady, onClose }: AskPanelProps) {
                 type="date"
                 value={fromDate}
                 onChange={(e) => handleFromChange(e.target.value)}
-                className="bg-[#090b10] border border-terminal-border/60 rounded px-1.5 py-0.5 text-[10px] text-terminal-white outline-none focus:border-terminal-green/60"
+                className="bg-[#090b10] border border-terminal-border/60 rounded-sm px-1.5 py-0.5 text-[10px] text-terminal-white outline-hidden focus:border-terminal-green/60"
                 title="시작 날짜"
               />
               <input
                 type="date"
                 value={toDate}
                 onChange={(e) => handleToChange(e.target.value)}
-                className="bg-[#090b10] border border-terminal-border/60 rounded px-1.5 py-0.5 text-[10px] text-terminal-white outline-none focus:border-terminal-green/60"
+                className="bg-[#090b10] border border-terminal-border/60 rounded-sm px-1.5 py-0.5 text-[10px] text-terminal-white outline-hidden focus:border-terminal-green/60"
                 title="종료 날짜"
               />
             </div>
@@ -536,15 +536,15 @@ export default function AskPanel({ isReady, onClose }: AskPanelProps) {
 
             {/* oss 미지원 안내 */}
             {isOssUnsupportedKind ? (
-              <div className="text-[10px] text-terminal-gray/80 bg-[#161a23] p-2 rounded border border-terminal-border/30">
+              <div className="text-[10px] text-terminal-gray/80 bg-[#161a23] p-2 rounded-sm border border-terminal-border/30">
                 {UI_TEXT.ossNotSupported}
               </div>
             ) : candidatesError ? (
-              <div className="text-[10px] text-terminal-red bg-terminal-red/10 p-2 rounded border border-terminal-red/20">
+              <div className="text-[10px] text-terminal-red bg-terminal-red/10 p-2 rounded-sm border border-terminal-red/20">
                 {UI_TEXT.loadCandidatesError}
               </div>
             ) : hasNoRecordsForKind ? (
-              <div className="text-[10px] text-terminal-gray/80 bg-[#161a23] p-2 rounded border border-terminal-border/30">
+              <div className="text-[10px] text-terminal-gray/80 bg-[#161a23] p-2 rounded-sm border border-terminal-border/30">
                 {UI_TEXT.noRecords}
               </div>
             ) : (
@@ -589,7 +589,7 @@ export default function AskPanel({ isReady, onClose }: AskPanelProps) {
                       onKeyDown={handleSearchKeyDown}
                       placeholder={UI_TEXT.searchPlaceholder}
                       aria-label="대상 검색"
-                      className="w-full bg-[#090b10] border border-terminal-border/60 rounded px-2 py-0.5 text-[10px] text-terminal-white placeholder-terminal-gray outline-none focus:border-terminal-blue/60"
+                      className="w-full bg-[#090b10] border border-terminal-border/60 rounded-sm px-2 py-0.5 text-[10px] text-terminal-white placeholder-terminal-gray outline-hidden focus:border-terminal-blue/60"
                     />
                   </div>
                 )}
@@ -599,7 +599,7 @@ export default function AskPanel({ isReady, onClose }: AskPanelProps) {
                   id="target-candidates-listbox"
                   role="listbox"
                   aria-label="대상 목록"
-                  className="flex flex-wrap gap-1 max-h-32 overflow-y-auto p-1 bg-[#090b10] border border-terminal-border/40 rounded scrollbar-hide"
+                  className="flex flex-wrap gap-1 max-h-32 overflow-y-auto p-1 bg-[#090b10] border border-terminal-border/40 rounded-sm scrollbar-hide"
                 >
                   {filteredTargetItems.length === 0 ? (
                     <div className="text-[9px] text-terminal-gray p-1">{UI_TEXT.noSearchResults}</div>
@@ -691,7 +691,7 @@ export default function AskPanel({ isReady, onClose }: AskPanelProps) {
 
           {/* 검증 에러 알림 */}
           {validationError && (
-            <div className="text-[10px] text-terminal-red bg-terminal-red/10 px-2 py-1 rounded border border-terminal-red/30">
+            <div className="text-[10px] text-terminal-red bg-terminal-red/10 px-2 py-1 rounded-sm border border-terminal-red/30">
               ※ {validationError}
             </div>
           )}
@@ -702,7 +702,7 @@ export default function AskPanel({ isReady, onClose }: AskPanelProps) {
               type="button"
               disabled={executing || !getMetricSupport(metric).ok}
               onClick={handleExecute}
-              className="w-full py-1.5 rounded text-[11px] font-bold bg-terminal-green/20 text-terminal-green border border-terminal-green/50 hover:bg-terminal-green/30 disabled:opacity-30 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-1.5 shadow-sm"
+              className="w-full py-1.5 rounded-sm text-[11px] font-bold bg-terminal-green/20 text-terminal-green border border-terminal-green/50 hover:bg-terminal-green/30 disabled:opacity-30 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-1.5 shadow-xs"
             >
               {executing ? (
                 <>
@@ -736,7 +736,7 @@ export default function AskPanel({ isReady, onClose }: AskPanelProps) {
                 </div>
 
                 {/* 결과 카드 */}
-                <div className="bg-terminal-surface border border-terminal-border rounded p-2.5 space-y-2">
+                <div className="bg-terminal-surface border border-terminal-border rounded-sm p-2.5 space-y-2">
                   {/* 핵심 결과 값 */}
                   <div className="text-sm font-bold text-terminal-green py-0.5">
                     {item.result.value}
@@ -751,7 +751,7 @@ export default function AskPanel({ isReady, onClose }: AskPanelProps) {
                         {item.result.rows.map((r, ri) => (
                           <div
                             key={ri}
-                            className="flex items-center justify-between text-[10px] bg-[#12151c] px-2 py-1 rounded border border-terminal-border/20"
+                            className="flex items-center justify-between text-[10px] bg-[#12151c] px-2 py-1 rounded-sm border border-terminal-border/20"
                           >
                             <div className="flex items-center gap-1.5 min-w-0">
                               <span className="text-terminal-gray shrink-0">[{r.time}]</span>

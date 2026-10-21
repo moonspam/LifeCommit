@@ -24,7 +24,7 @@ export default function DatabaseErrorView({ errorMessage, onResetDB, onRetry }: 
           <p>
             SQLite 암호화 브릿지 바인딩 또는 스키마 초기화 도중 에러가 발생했습니다.
           </p>
-          <div className="bg-[#0b0c0f] border border-terminal-border/40 rounded p-3 text-[11px] text-red-400 font-mono break-all whitespace-pre-wrap">
+          <div className="bg-[#0b0c0f] border border-terminal-border/40 rounded-sm p-3 text-[11px] text-red-400 font-mono break-all whitespace-pre-wrap">
             {errorMessage || "Error: sqlite.setEncryptionSecret or sqlite.createConnection failed."}
           </div>
           <p>아래 버튼을 사용하여 캐시된 DB 연결과 비밀키를 완전히 초기화하고 새롭게 마운트해 보세요.</p>
@@ -34,13 +34,13 @@ export default function DatabaseErrorView({ errorMessage, onResetDB, onRetry }: 
         <div className="flex flex-col gap-2">
           <button
             onClick={onResetDB}
-            className="w-full py-3 px-4 bg-red-600 hover:bg-red-500 text-white font-bold text-xs uppercase tracking-widest rounded shadow transition-all duration-200"
+            className="w-full py-3 px-4 bg-red-600 hover:bg-red-500 text-white font-bold text-xs uppercase tracking-widest rounded-sm shadow-sm transition-all duration-200"
           >
             ⚡ RESET & REBUILD DATABASE (추천)
           </button>
           <button
             onClick={onRetry}
-            className="w-full py-3 px-4 bg-transparent hover:bg-terminal-border/20 text-terminal-green border border-terminal-green/50 font-bold text-xs uppercase tracking-widest rounded transition-all duration-200"
+            className="w-full py-3 px-4 bg-transparent hover:bg-terminal-border/20 text-terminal-green border border-terminal-green/50 font-bold text-xs uppercase tracking-widest rounded-sm transition-all duration-200"
           >
             🔄 RETRY INITIALIZATION
           </button>

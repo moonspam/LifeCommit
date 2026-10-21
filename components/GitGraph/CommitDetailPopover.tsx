@@ -67,7 +67,7 @@ export default function CommitDetailPopover({
     <div
       ref={popoverRef}
       onClick={(e) => e.stopPropagation()}
-      className={`absolute ${positionClass} z-50 bg-[#161b22]/95 backdrop-blur-md border border-terminal-border/80 rounded-xl shadow-[0_12px_32px_rgba(0,0,0,0.7)] p-3 w-[290px] max-w-[calc(100vw-32px)] flex flex-col gap-2.5 transition-all duration-200 animate-fade-in`}
+      className={`absolute ${positionClass} z-50 bg-terminal-surface/95 backdrop-blur-md border border-terminal-border/80 rounded-xl shadow-[0_12px_32px_rgba(0,0,0,0.7)] p-3 w-[290px] max-w-[calc(100vw-32px)] flex flex-col gap-2.5 transition-all duration-200 animate-fade-in`}
       style={{ left: Math.max(8, leftOffset) }}
     >
       {/* 1. SMS 상세 */}
@@ -84,7 +84,7 @@ export default function CommitDetailPopover({
 
       {/* 5. MANUAL (수동 커밋) 메모 상세 */}
       {(commit.eventType === "manual" || commit.eventType === "MANUAL") && commit.body && (
-        <div className="bg-[#0e1117] border border-terminal-border/60 rounded p-2 text-xs text-terminal-white/90 whitespace-pre-wrap font-mono">
+        <div className="bg-[#0e1117] border border-terminal-border/60 rounded-sm p-2 text-xs text-terminal-white/90 whitespace-pre-wrap font-mono">
           {commit.body}
         </div>
       )}
@@ -94,7 +94,7 @@ export default function CommitDetailPopover({
         <div className="flex flex-col gap-1 pb-1.5 border-b border-terminal-border/40 text-[9px] font-mono">
           {commit.appPackage && (
             <div
-              className="text-terminal-blue cursor-pointer select-text active:bg-terminal-blue/20 rounded px-1 -mx-1 py-0.5 transition-colors truncate flex items-center justify-between"
+              className="text-terminal-blue cursor-pointer select-text active:bg-terminal-blue/20 rounded-sm px-1 -mx-1 py-0.5 transition-colors truncate flex items-center justify-between"
               onTouchStart={() => handleLongPressStart(commit.appPackage!)}
               onTouchEnd={handleLongPressEnd}
               onTouchCancel={handleLongPressEnd}
@@ -115,7 +115,7 @@ export default function CommitDetailPopover({
 
           {commit.lat != null && commit.lng != null && !commit.geofenceName && (
             <div
-              className="text-[#8be9fd] cursor-pointer active:bg-[#8be9fd]/20 rounded px-1 -mx-1 py-0.5 transition-colors flex items-center justify-between"
+              className="text-[#8be9fd] cursor-pointer active:bg-[#8be9fd]/20 rounded-sm px-1 -mx-1 py-0.5 transition-colors flex items-center justify-between"
               onTouchStart={() => handleLongPressStart(`${commit.lat}, ${commit.lng}`)}
               onTouchEnd={handleLongPressEnd}
               onTouchCancel={handleLongPressEnd}
@@ -143,7 +143,7 @@ export default function CommitDetailPopover({
           {isChangingCategory && <div className="flex flex-wrap gap-1 mt-2">{appBranches.map((branch) => <button key={branch.id} onClick={async () => {
             try { const { setAppBranchOverride } = await import("@/lib/commitManager"); await setAppBranchOverride(commit.appPackage!, branch.id); onToast("앱 분류와 과거 기록을 변경했습니다."); setIsChangingCategory(false); }
             catch (err: any) { alert("분류 변경 실패: " + err.message); }
-          }} className="px-1.5 py-1 border border-terminal-border rounded text-[9px] text-terminal-blue">{branch.name}</button>)}</div>}
+          }} className="px-1.5 py-1 border border-terminal-border rounded-sm text-[9px] text-terminal-blue">{branch.name}</button>)}</div>}
         </div>
       )}
 
@@ -161,7 +161,7 @@ export default function CommitDetailPopover({
               alert("삭제 실패: " + err.message);
             }
           }}
-          className="text-terminal-red/70 hover:text-terminal-red text-[10px] font-mono px-1.5 py-0.5 rounded hover:bg-terminal-red/10 transition-colors flex items-center gap-1"
+          className="text-terminal-red/70 hover:text-terminal-red text-[10px] font-mono px-1.5 py-0.5 rounded-sm hover:bg-terminal-red/10 transition-colors flex items-center gap-1"
           title="커밋 삭제"
         >
           <span>🗑️</span>

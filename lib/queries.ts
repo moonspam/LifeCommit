@@ -1,6 +1,7 @@
 import { getDB } from "./db";
 import { COVERAGE_SQL, coverageParams, parseCoverage } from "./coverage";
-import { PERIOD_ROWS_SQL, PERIOD_SEC_SQL, periodRowsParams, periodSecParams } from "./periodSec";
+import { periodSec, PERIOD_ROWS_SQL, PERIOD_SEC_SQL, periodRowsParams, periodSecParams } from "./periodSec";
+import { dayRange, dateKey } from "./today";
 import { Commit } from "@/types/commit";
 import { Capacitor } from "@capacitor/core";
 
@@ -403,48 +404,109 @@ export async function getPeopleCommitsByPeriod(startTime: number, endTime: numbe
   }
 }
 
-export async function getDailyCommitCounts(year: number): Promise<{date: string, count: number, totalDuration: number}[]> {
+export async function getDailyScreenSeconds(
+  year: number,
+  customDb?: { query(sql: string, params?: unknown[]): Promise<{ values?: any[] }> }
+): Promise<{ date: string; sec: number }[]> {
   try {
-    const db = getDB();
-    const startOfYear = new Date(year, 0, 1).getTime();
-    const endOfYear = new Date(year, 11, 31, 23, 59, 59, 999).getTime();
+    const db = customDb ?? getDB();
+    const startOfYear = new Date(year, 0, 1, 0, 0, 0, 0).getTime();
+    const endOfYear = new Date(year + 1, 0, 1, 0, 0, 0, 0).getTime() - 1;
 
-    const query = `
-      SELECT 
-        strftime('%Y-%m-%d', started_at / 1000, 'unixepoch', 'localtime') as day_date,
-        COUNT(id) as commit_count,
-        SUM(duration_sec) as total_duration,
-        COUNT(*) as cnt
+    const { NOISE_PACKAGES } = await import("./constants");
+    const noisePkgs = [...NOISE_PACKAGES].filter(Boolean);
+    const noiseClause = noisePkgs.length ? `AND app_package NOT IN (${noisePkgs.map(() => "?").join(",")})` : "";
+
+    // 1) 시작일과 종료일이 같은 날짜인 일반 세션 (SQL GROUP BY로 한 번에 집계)
+    const sameDayQuery = `
+      SELECT
+        strftime('%Y-%m-%d', started_at / 1000, 'unixepoch', 'localtime') AS day_date,
+        SUM(duration_sec) AS total_sec
       FROM commits
-      WHERE started_at >= ? AND started_at <= ?
+      WHERE event_type = 'APP_USAGE'
+        AND app_package IS NOT NULL
+        ${noiseClause}
+        AND started_at >= ? AND started_at <= ?
+        AND strftime('%Y-%m-%d', started_at / 1000, 'unixepoch', 'localtime') =
+            strftime('%Y-%m-%d', CASE WHEN ended_at > started_at THEN (ended_at - 1) / 1000 ELSE started_at / 1000 END, 'unixepoch', 'localtime')
       GROUP BY day_date
       ORDER BY day_date ASC
     `;
-    const res = await db.query(query, [startOfYear, endOfYear]);
-    if (!res.values) return [];
-    
-    return res.values.map((row: any) => ({
-      date: row.day_date,
-      count: row.commit_count,
-      totalDuration: row.total_duration
-    }));
+    const sameDayRes = await db.query(sameDayQuery, [...noisePkgs, startOfYear, endOfYear]);
+
+    // 2) 자정을 넘는 세션 (시작일 != 종료일)
+    const crossMidnightQuery = `
+      SELECT
+        started_at,
+        ended_at,
+        duration_sec
+      FROM commits
+      WHERE event_type = 'APP_USAGE'
+        AND app_package IS NOT NULL
+        ${noiseClause}
+        AND started_at <= ? AND (ended_at >= ? OR started_at >= ?)
+        AND strftime('%Y-%m-%d', started_at / 1000, 'unixepoch', 'localtime') !=
+            strftime('%Y-%m-%d', CASE WHEN ended_at > started_at THEN (ended_at - 1) / 1000 ELSE started_at / 1000 END, 'unixepoch', 'localtime')
+    `;
+    const crossMidnightRes = await db.query(crossMidnightQuery, [...noisePkgs, endOfYear, startOfYear, startOfYear]);
+
+
+    const dateSecMap = new Map<string, number>();
+
+    for (const row of sameDayRes.values || []) {
+      const d = String(row.day_date);
+      const sec = Number(row.total_sec || 0);
+      dateSecMap.set(d, (dateSecMap.get(d) || 0) + sec);
+    }
+
+    for (const row of crossMidnightRes.values || []) {
+      const startedAt = Number(row.started_at);
+      const endedAt = Number(row.ended_at);
+      const durationSec = Number(row.duration_sec);
+
+      let cur = new Date(startedAt);
+      cur = new Date(cur.getFullYear(), cur.getMonth(), cur.getDate(), 0, 0, 0, 0);
+      const endLimit = Math.max(endedAt, startedAt);
+
+      while (cur.getTime() <= endLimit) {
+        const curYear = cur.getFullYear();
+        if (curYear === year) {
+          const dateStr = dateKey(cur);
+          const { start, end } = dayRange(dateStr);
+          const s = periodSec({ startedAt, endedAt, durationSec }, start, end);
+          if (s > 0) {
+            dateSecMap.set(dateStr, (dateSecMap.get(dateStr) || 0) + s);
+          }
+        }
+        cur.setDate(cur.getDate() + 1);
+      }
+    }
+
+    const result: { date: string; sec: number }[] = [];
+    for (const [date, sec] of dateSecMap.entries()) {
+      if (sec > 0) {
+        result.push({ date, sec });
+      }
+    }
+    result.sort((a, b) => a.date.localeCompare(b.date));
+    return result;
   } catch (e) {
     if (Capacitor.getPlatform() === 'web') {
-      const dummyCounts = [];
+      const dummyCounts: { date: string; sec: number }[] = [];
       const now = new Date();
-      // 테스트용으로 최근 180일치 랜덤 잔디 생성
       for (let i = 0; i < 180; i++) {
         const d = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
-        const dateString = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-        dummyCounts.push({
-          date: dateString,
-          count: Math.floor(Math.random() * 35), // 0~34 커밋
-          totalDuration: Math.floor(Math.random() * 3600),
-        });
+        if (d.getFullYear() === year) {
+          const dateString = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+          dummyCounts.push({
+            date: dateString,
+            sec: Math.floor(Math.random() * 21600),
+          });
+        }
       }
       return dummyCounts;
     }
-    console.warn("Failed to get daily commit counts:", e);
+    console.warn("Failed to get daily screen seconds:", e);
     return [];
   }
 }

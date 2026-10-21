@@ -769,7 +769,7 @@ export default function FilterSettingsModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-3.5 animate-fade-in font-mono">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs p-3.5 animate-fade-in font-mono">
       <div className="bg-[#0e1117] border border-terminal-border rounded-xl shadow-2xl w-full max-w-xl flex flex-col h-[85vh] max-h-[640px] overflow-hidden">
         {/* 모달 상단 헤더 */}
         <div className="border-b border-terminal-border/80 bg-[#141822]">
@@ -780,7 +780,7 @@ export default function FilterSettingsModal({
             </h2>
             <button
               onClick={onClose}
-              className="text-terminal-gray hover:text-terminal-white p-1 rounded hover:bg-terminal-surface transition-colors"
+              className="text-terminal-gray hover:text-terminal-white p-1 rounded-sm hover:bg-terminal-surface transition-colors"
               title="닫기"
             >
               ✕
@@ -861,7 +861,7 @@ export default function FilterSettingsModal({
           {/* 1. 노이즈 필터 탭 */}
           {activeTab === "filters" && (
             <div className="flex-1 flex flex-col gap-2.5 min-h-0">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-2">
                 <p className="text-terminal-gray leading-relaxed text-[11px]">
                   차단할 앱 패키지명을 줄 단위로 입력하세요. (.gitignore 역할)
                 </p>
@@ -872,15 +872,15 @@ export default function FilterSettingsModal({
                       setText(DEFAULT_NOISE_FILTERS_TEXT);
                     }
                   }}
-                  className="px-2 py-1 rounded bg-[#1e2433] hover:bg-[#283144] border border-terminal-border/80 text-terminal-green text-[10px] font-bold transition-all shadow-sm flex items-center gap-1"
+                  className="px-2 py-1 rounded-sm bg-[#1e2433] hover:bg-[#283144] border border-terminal-border/80 text-terminal-green text-[10px] font-bold transition-all shadow-xs flex items-center gap-1 shrink-0 whitespace-nowrap"
                   title="시스템/생체인증/키보드 등 최신 추천 필터로 재설정"
                 >
                   <span>↺</span>
-                  <span>최신 추천 필터로 초기화</span>
+                  <span>추천 필터로 초기화</span>
                 </button>
               </div>
 
-              <div className="bg-terminal-green/10 border border-terminal-green/30 rounded p-2 text-[10px] text-terminal-green flex items-start gap-1.5">
+              <div className="bg-terminal-green/10 border border-terminal-green/30 rounded-sm p-2 text-[10px] text-terminal-green flex items-start gap-1.5">
                 <span className="text-xs">💡</span>
                 <span>
                   <strong>[기존 과거 로그 자동 정리]</strong> 필터 저장 시 등록된 앱의 <strong>기존 커밋도 함께 정리</strong>됩니다. 필터를 유지하는 동안 제외되며, 필터에서 빼면 시스템에 남아 있는 기간의 기록은 다시 수집될 수 있습니다.
@@ -890,7 +890,7 @@ export default function FilterSettingsModal({
               <textarea
                 value={text}
                 onChange={(e) => setText(e.target.value)}
-                className="flex-1 w-full bg-[#080a0f] border border-terminal-border rounded p-3 text-xs text-terminal-white focus:outline-none focus:border-terminal-green resize-none font-mono"
+                className="flex-1 w-full bg-[#080a0f] border border-terminal-border rounded-sm p-3 text-xs text-terminal-white focus:outline-hidden focus:border-terminal-green resize-none font-mono"
                 placeholder="# 예시:&#10;com.sec.android.app.launcher&#10;com.samsung.android.weather"
                 spellCheck="false"
               />
@@ -914,7 +914,7 @@ export default function FilterSettingsModal({
                 </div>
 
                 {appToast && (
-                  <div className="bg-terminal-green/15 border border-terminal-green/40 rounded px-2.5 py-1.5 text-[11px] text-terminal-green flex items-center justify-between animate-fade-in">
+                  <div className="bg-terminal-green/15 border border-terminal-green/40 rounded-sm px-2.5 py-1.5 text-[11px] text-terminal-green flex items-center justify-between animate-fade-in">
                     <span>{appToast}</span>
                   </div>
                 )}
@@ -925,7 +925,7 @@ export default function FilterSettingsModal({
                     value={appSearchQuery}
                     onChange={(e) => setAppSearchQuery(e.target.value)}
                     placeholder="앱 이름 또는 패키지명 검색 (예: chrome, 카카오톡)..."
-                    className="w-full bg-[#080a0f] border border-terminal-border rounded px-3 py-2 text-xs text-terminal-white placeholder:text-terminal-gray/60 focus:outline-none focus:border-terminal-green font-mono"
+                    className="w-full bg-[#080a0f] border border-terminal-border rounded-sm px-3 py-2 text-xs text-terminal-white placeholder:text-terminal-gray/60 focus:outline-hidden focus:border-terminal-green font-mono"
                   />
                   {appSearchQuery && (
                     <button
@@ -972,7 +972,7 @@ export default function FilterSettingsModal({
                           return (
                             <div
                               key={app.pkg}
-                              className="rounded border border-terminal-border/60 bg-[#121620] overflow-hidden transition-colors"
+                              className="rounded-sm border border-terminal-border/60 bg-[#121620] overflow-hidden transition-colors"
                             >
                               <button
                                 type="button"
@@ -986,7 +986,7 @@ export default function FilterSettingsModal({
                                       {app.name}
                                     </span>
                                     {app.branchId === 1 && (
-                                      <span className="text-[10px] px-1.5 py-0.2 bg-terminal-yellow/10 border border-terminal-yellow/30 text-terminal-yellow rounded shrink-0">
+                                      <span className="text-[10px] px-1.5 py-0.2 bg-terminal-yellow/10 border border-terminal-yellow/30 text-terminal-yellow rounded-sm shrink-0">
                                         미분류
                                       </span>
                                     )}
@@ -1069,7 +1069,7 @@ export default function FilterSettingsModal({
                     type="button"
                     onClick={handleGetLocation}
                     disabled={isFetchingGPS}
-                    className="px-2 py-1 rounded bg-terminal-blue/20 text-terminal-blue hover:bg-terminal-blue/30 border border-terminal-blue/40 text-[10px] font-bold transition-colors flex items-center gap-1"
+                    className="px-2 py-1 rounded-sm bg-terminal-blue/20 text-terminal-blue hover:bg-terminal-blue/30 border border-terminal-blue/40 text-[10px] font-bold transition-colors flex items-center gap-1"
                   >
                     <span>🛰️</span>
                     <span>{isFetchingGPS ? "GPS 수신 중..." : "현재 GPS 위치 불러오기"}</span>
@@ -1083,14 +1083,14 @@ export default function FilterSettingsModal({
                     value={newGfName}
                     onChange={(e) => setNewGfName(e.target.value)}
                     required
-                    className="bg-[#080a0f] border border-terminal-border rounded px-2.5 py-1.5 text-xs text-terminal-white outline-none focus:border-terminal-green"
+                    className="bg-[#080a0f] border border-terminal-border rounded-sm px-2.5 py-1.5 text-xs text-terminal-white outline-hidden focus:border-terminal-green"
                   />
                   <input
                     type="text"
                     placeholder="트리거 브랜치 (기본: main)"
                     value={newGfBranch}
                     onChange={(e) => setNewGfBranch(e.target.value)}
-                    className="bg-[#080a0f] border border-terminal-border rounded px-2.5 py-1.5 text-xs text-terminal-white outline-none focus:border-terminal-green"
+                    className="bg-[#080a0f] border border-terminal-border rounded-sm px-2.5 py-1.5 text-xs text-terminal-white outline-hidden focus:border-terminal-green"
                   />
                 </div>
 
@@ -1102,7 +1102,7 @@ export default function FilterSettingsModal({
                     value={newGfLat}
                     onChange={(e) => setNewGfLat(e.target.value)}
                     required
-                    className="bg-[#080a0f] border border-terminal-border rounded px-2.5 py-1.5 text-xs text-terminal-white outline-none focus:border-terminal-green"
+                    className="bg-[#080a0f] border border-terminal-border rounded-sm px-2.5 py-1.5 text-xs text-terminal-white outline-hidden focus:border-terminal-green"
                   />
                   <input
                     type="number"
@@ -1111,20 +1111,20 @@ export default function FilterSettingsModal({
                     value={newGfLng}
                     onChange={(e) => setNewGfLng(e.target.value)}
                     required
-                    className="bg-[#080a0f] border border-terminal-border rounded px-2.5 py-1.5 text-xs text-terminal-white outline-none focus:border-terminal-green"
+                    className="bg-[#080a0f] border border-terminal-border rounded-sm px-2.5 py-1.5 text-xs text-terminal-white outline-hidden focus:border-terminal-green"
                   />
                   <input
                     type="number"
                     placeholder="반경 (10~5000m, 기본 150)"
                     value={newGfRadius}
                     onChange={(e) => setNewGfRadius(e.target.value)}
-                    className="bg-[#080a0f] border border-terminal-border rounded px-2.5 py-1.5 text-xs text-terminal-white outline-none focus:border-terminal-green"
+                    className="bg-[#080a0f] border border-terminal-border rounded-sm px-2.5 py-1.5 text-xs text-terminal-white outline-hidden focus:border-terminal-green"
                   />
                 </div>
 
                 <button
                   type="submit"
-                  className="mt-1 py-1.5 rounded bg-terminal-green/20 text-terminal-green hover:bg-terminal-green/30 border border-terminal-green/40 font-bold text-xs transition-colors"
+                  className="mt-1 py-1.5 rounded-sm bg-terminal-green/20 text-terminal-green hover:bg-terminal-green/30 border border-terminal-green/40 font-bold text-xs transition-colors"
                 >
                   + 장소 추가
                 </button>
@@ -1143,7 +1143,7 @@ export default function FilterSettingsModal({
                     editingGfId === gf.id ? (
                       <div
                         key={gf.id}
-                        className="bg-[#121620] border border-terminal-green/50 rounded p-2.5 flex flex-col gap-2"
+                        className="bg-[#121620] border border-terminal-green/50 rounded-sm p-2.5 flex flex-col gap-2"
                       >
                         <div className="flex items-center justify-between">
                           <span className="text-terminal-green font-bold text-[11px]">📍 장소 수정</span>
@@ -1151,7 +1151,7 @@ export default function FilterSettingsModal({
                             type="button"
                             onClick={handleGetLocationForEdit}
                             disabled={isEditingFetchingGPS}
-                            className="px-2 py-0.5 rounded bg-terminal-blue/20 text-terminal-blue hover:bg-terminal-blue/30 border border-terminal-blue/40 text-[9px] font-bold transition-colors"
+                            className="px-2 py-0.5 rounded-sm bg-terminal-blue/20 text-terminal-blue hover:bg-terminal-blue/30 border border-terminal-blue/40 text-[9px] font-bold transition-colors"
                           >
                             {isEditingFetchingGPS ? "GPS 수신 중..." : "현재 위치로"}
                           </button>
@@ -1162,14 +1162,14 @@ export default function FilterSettingsModal({
                             value={editGfName}
                             onChange={(e) => setEditGfName(e.target.value)}
                             placeholder="장소명"
-                            className="bg-[#080a0f] border border-terminal-border rounded px-2 py-1 text-xs text-terminal-white outline-none focus:border-terminal-green"
+                            className="bg-[#080a0f] border border-terminal-border rounded-sm px-2 py-1 text-xs text-terminal-white outline-hidden focus:border-terminal-green"
                           />
                           <input
                             type="number"
                             value={editGfRadius}
                             onChange={(e) => setEditGfRadius(e.target.value)}
                             placeholder="반경(10~5000m)"
-                            className="bg-[#080a0f] border border-terminal-border rounded px-2 py-1 text-xs text-terminal-white outline-none focus:border-terminal-green"
+                            className="bg-[#080a0f] border border-terminal-border rounded-sm px-2 py-1 text-xs text-terminal-white outline-hidden focus:border-terminal-green"
                           />
                         </div>
                         <div className="flex items-center justify-between text-[10px] text-terminal-gray">
@@ -1180,14 +1180,14 @@ export default function FilterSettingsModal({
                             <button
                               type="button"
                               onClick={() => handleSaveEditGeofence(gf.id)}
-                              className="px-2.5 py-0.5 rounded bg-terminal-green/20 text-terminal-green hover:bg-terminal-green/30 border border-terminal-green/40 font-bold"
+                              className="px-2.5 py-0.5 rounded-sm bg-terminal-green/20 text-terminal-green hover:bg-terminal-green/30 border border-terminal-green/40 font-bold"
                             >
                               저장
                             </button>
                             <button
                               type="button"
                               onClick={handleCancelEditGeofence}
-                              className="px-2 py-0.5 rounded bg-terminal-border/20 text-terminal-gray hover:text-terminal-white"
+                              className="px-2 py-0.5 rounded-sm bg-terminal-border/20 text-terminal-gray hover:text-terminal-white"
                             >
                               취소
                             </button>
@@ -1197,12 +1197,12 @@ export default function FilterSettingsModal({
                     ) : (
                       <div
                         key={gf.id}
-                        className="bg-[#121620] border border-terminal-border/40 rounded p-2.5 flex items-center justify-between"
+                        className="bg-[#121620] border border-terminal-border/40 rounded-sm p-2.5 flex items-center justify-between"
                       >
                         <div className="flex flex-col gap-0.5">
                           <div className="flex items-center gap-2">
                             <span className="text-terminal-white font-bold">{gf.name}</span>
-                            <span className="text-[10px] text-terminal-blue bg-terminal-blue/10 px-1.5 py-0.2 rounded border border-terminal-blue/30">
+                            <span className="text-[10px] text-terminal-blue bg-terminal-blue/10 px-1.5 py-0.2 rounded-sm border border-terminal-blue/30">
                               🌿 {gf.branch_trigger}
                             </span>
                           </div>
@@ -1213,13 +1213,13 @@ export default function FilterSettingsModal({
                         <div className="flex items-center gap-1.5">
                           <button
                             onClick={() => handleStartEditGeofence(gf)}
-                            className="text-terminal-blue/80 hover:text-terminal-blue px-2 py-1 rounded hover:bg-terminal-blue/10 transition-colors text-[11px]"
+                            className="text-terminal-blue/80 hover:text-terminal-blue px-2 py-1 rounded-sm hover:bg-terminal-blue/10 transition-colors text-[11px]"
                           >
                             수정
                           </button>
                           <button
                             onClick={() => handleDeleteGeofence(gf.id)}
-                            className="text-terminal-red/80 hover:text-terminal-red px-2 py-1 rounded hover:bg-terminal-red/10 transition-colors text-[11px]"
+                            className="text-terminal-red/80 hover:text-terminal-red px-2 py-1 rounded-sm hover:bg-terminal-red/10 transition-colors text-[11px]"
                           >
                             삭제
                           </button>
@@ -1269,14 +1269,14 @@ export default function FilterSettingsModal({
                         getActiveOptionId(isNewContactOpen, isNewContactNavigating, newContactHighlightIdx, filteredNewCandidates.length, "new-contact-opt")
                       }
                       required
-                      className="w-full bg-[#080a0f] border border-terminal-border rounded px-2.5 py-1.5 text-xs text-terminal-white outline-none focus:border-terminal-green"
+                      className="w-full bg-[#080a0f] border border-terminal-border rounded-sm px-2.5 py-1.5 text-xs text-terminal-white outline-hidden focus:border-terminal-green"
                     />
                     {isNewContactOpen && filteredNewCandidates.length > 0 && (
                       <div
                         id="new-contact-candidates-listbox"
                         role="listbox"
                         aria-label="연락처 후보"
-                        className="absolute left-0 right-0 top-full mt-1 z-30 max-h-36 overflow-y-auto bg-[#0c0e14] border border-terminal-border/80 rounded shadow-xl p-1 flex flex-col gap-0.5 scrollbar-hide"
+                        className="absolute left-0 right-0 top-full mt-1 z-30 max-h-36 overflow-y-auto bg-[#0c0e14] border border-terminal-border/80 rounded-sm shadow-xl p-1 flex flex-col gap-0.5 scrollbar-hide"
                       >
                         {filteredNewCandidates.map((cand, idx) => {
                           const isHighlighted = isNewContactNavigating && idx === newContactHighlightIdx;
@@ -1299,7 +1299,7 @@ export default function FilterSettingsModal({
                             >
                               <span>{cand.name} <span className="text-terminal-gray text-[10px]">(…{cand.phoneEnding})</span></span>
                               {cand.tag && (
-                                <span className="text-[10px] text-terminal-yellow bg-terminal-yellow/10 px-1 py-0.2 rounded border border-terminal-yellow/30 font-bold">
+                                <span className="text-[10px] text-terminal-yellow bg-terminal-yellow/10 px-1 py-0.2 rounded-sm border border-terminal-yellow/30 font-bold">
                                   #{cand.tag.replace(/^[#@]+/, "")}
                                 </span>
                               )}
@@ -1315,12 +1315,12 @@ export default function FilterSettingsModal({
                     value={newTagName}
                     onChange={(e) => setNewTagName(e.target.value)}
                     required
-                    className="bg-[#080a0f] border border-terminal-border rounded px-2.5 py-1.5 text-xs text-terminal-white outline-none focus:border-terminal-green"
+                    className="bg-[#080a0f] border border-terminal-border rounded-sm px-2.5 py-1.5 text-xs text-terminal-white outline-hidden focus:border-terminal-green"
                   />
                 </div>
                 <button
                   type="submit"
-                  className="mt-1 py-1.5 rounded bg-terminal-green/20 text-terminal-green hover:bg-terminal-green/30 border border-terminal-green/40 font-bold text-xs transition-colors"
+                  className="mt-1 py-1.5 rounded-sm bg-terminal-green/20 text-terminal-green hover:bg-terminal-green/30 border border-terminal-green/40 font-bold text-xs transition-colors"
                 >
                   + 태그 추가
                 </button>
@@ -1335,7 +1335,7 @@ export default function FilterSettingsModal({
                     editingTagId === t.id ? (
                       <div
                         key={t.id}
-                        className="bg-[#121620] border border-terminal-green/50 rounded p-2.5 flex flex-col gap-2"
+                        className="bg-[#121620] border border-terminal-green/50 rounded-sm p-2.5 flex flex-col gap-2"
                       >
                         <span className="text-terminal-green font-bold text-[11px]">🏷️ 태그 수정</span>
                         <div className="grid grid-cols-2 gap-1.5">
@@ -1370,14 +1370,14 @@ export default function FilterSettingsModal({
                                 getActiveOptionId(isEditContactOpen, isEditContactNavigating, editContactHighlightIdx, filteredEditCandidates.length, "edit-contact-opt")
                               }
                               placeholder="연락처 이름"
-                              className="w-full bg-[#080a0f] border border-terminal-border rounded px-2 py-1 text-xs text-terminal-white outline-none focus:border-terminal-green"
+                              className="w-full bg-[#080a0f] border border-terminal-border rounded-sm px-2 py-1 text-xs text-terminal-white outline-hidden focus:border-terminal-green"
                             />
                             {isEditContactOpen && filteredEditCandidates.length > 0 && (
                               <div
                                 id="edit-contact-candidates-listbox"
                                 role="listbox"
                                 aria-label="연락처 후보"
-                                className="absolute left-0 right-0 top-full mt-1 z-30 max-h-36 overflow-y-auto bg-[#0c0e14] border border-terminal-border/80 rounded shadow-xl p-1 flex flex-col gap-0.5 scrollbar-hide"
+                                className="absolute left-0 right-0 top-full mt-1 z-30 max-h-36 overflow-y-auto bg-[#0c0e14] border border-terminal-border/80 rounded-sm shadow-xl p-1 flex flex-col gap-0.5 scrollbar-hide"
                               >
                                 {filteredEditCandidates.map((cand, idx) => {
                                   const isHighlighted = isEditContactNavigating && idx === editContactHighlightIdx;
@@ -1400,7 +1400,7 @@ export default function FilterSettingsModal({
                                     >
                                       <span>{cand.name} <span className="text-terminal-gray text-[10px]">(…{cand.phoneEnding})</span></span>
                                       {cand.tag && (
-                                        <span className="text-[10px] text-terminal-yellow bg-terminal-yellow/10 px-1 py-0.2 rounded border border-terminal-yellow/30 font-bold">
+                                        <span className="text-[10px] text-terminal-yellow bg-terminal-yellow/10 px-1 py-0.2 rounded-sm border border-terminal-yellow/30 font-bold">
                                           #{cand.tag.replace(/^[#@]+/, "")}
                                         </span>
                                       )}
@@ -1415,7 +1415,7 @@ export default function FilterSettingsModal({
                             value={editTagName}
                             onChange={(e) => setEditTagName(e.target.value)}
                             placeholder="태그"
-                            className="bg-[#080a0f] border border-terminal-border rounded px-2 py-1 text-xs text-terminal-white outline-none focus:border-terminal-green"
+                            className="bg-[#080a0f] border border-terminal-border rounded-sm px-2 py-1 text-xs text-terminal-white outline-hidden focus:border-terminal-green"
                           />
                         </div>
                         <div className="flex items-center justify-between text-[10px] text-terminal-gray">
@@ -1424,14 +1424,14 @@ export default function FilterSettingsModal({
                             <button
                               type="button"
                               onClick={() => handleSaveEditTag(t.id)}
-                              className="px-2.5 py-0.5 rounded bg-terminal-green/20 text-terminal-green hover:bg-terminal-green/30 border border-terminal-green/40 font-bold"
+                              className="px-2.5 py-0.5 rounded-sm bg-terminal-green/20 text-terminal-green hover:bg-terminal-green/30 border border-terminal-green/40 font-bold"
                             >
                               저장
                             </button>
                             <button
                               type="button"
                               onClick={handleCancelEditTag}
-                              className="px-2 py-0.5 rounded bg-terminal-border/20 text-terminal-gray hover:text-terminal-white"
+                              className="px-2 py-0.5 rounded-sm bg-terminal-border/20 text-terminal-gray hover:text-terminal-white"
                             >
                               취소
                             </button>
@@ -1441,24 +1441,24 @@ export default function FilterSettingsModal({
                     ) : (
                       <div
                         key={t.id}
-                        className="bg-[#121620] border border-terminal-border/40 rounded p-2.5 flex items-center justify-between"
+                        className="bg-[#121620] border border-terminal-border/40 rounded-sm p-2.5 flex items-center justify-between"
                       >
                         <div className="flex items-center gap-2">
                           <span className="text-terminal-white font-bold">{formatContactTagDisplayName(t, tags)}</span>
-                          <span className="text-[10px] text-terminal-yellow bg-terminal-yellow/10 px-1.5 py-0.5 rounded border border-terminal-yellow/30 font-bold">
+                          <span className="text-[10px] text-terminal-yellow bg-terminal-yellow/10 px-1.5 py-0.5 rounded-sm border border-terminal-yellow/30 font-bold">
                             #{t.tag.replace(/^[#@]+/, "")}
                           </span>
                         </div>
                         <div className="flex items-center gap-1.5">
                           <button
                             onClick={() => handleStartEditTag(t)}
-                            className="text-terminal-blue/80 hover:text-terminal-blue px-2 py-1 rounded hover:bg-terminal-blue/10 transition-colors text-[11px]"
+                            className="text-terminal-blue/80 hover:text-terminal-blue px-2 py-1 rounded-sm hover:bg-terminal-blue/10 transition-colors text-[11px]"
                           >
                             수정
                           </button>
                           <button
                             onClick={() => handleDeleteTag(t.id)}
-                            className="text-terminal-red/80 hover:text-terminal-red px-2 py-1 rounded hover:bg-terminal-red/10 transition-colors text-[11px]"
+                            className="text-terminal-red/80 hover:text-terminal-red px-2 py-1 rounded-sm hover:bg-terminal-red/10 transition-colors text-[11px]"
                           >
                             삭제
                           </button>
@@ -1484,7 +1484,7 @@ export default function FilterSettingsModal({
                 <button
                   onClick={handleExportBackup}
                   disabled={isBackingUp}
-                  className="py-2.5 px-4 rounded bg-terminal-surface hover:bg-terminal-border/40 text-terminal-green border border-terminal-green/40 font-bold text-xs flex items-center justify-center gap-2 transition-colors"
+                  className="py-2.5 px-4 rounded-sm bg-terminal-surface hover:bg-terminal-border/40 text-terminal-green border border-terminal-green/40 font-bold text-xs flex items-center justify-center gap-2 transition-colors"
                 >
                   <span>💾</span>
                   <span>{isBackingUp ? "내보내는 중..." : "전체 데이터 내보내기"}</span>
@@ -1508,7 +1508,7 @@ export default function FilterSettingsModal({
                 <button
                   onClick={() => fileInputRef.current?.click()}
                   disabled={isBackingUp}
-                  className="py-2.5 px-4 rounded bg-terminal-blue/15 hover:bg-terminal-blue/25 text-terminal-blue border border-terminal-blue/40 font-bold text-xs flex items-center justify-center gap-2 transition-colors"
+                  className="py-2.5 px-4 rounded-sm bg-terminal-blue/15 hover:bg-terminal-blue/25 text-terminal-blue border border-terminal-blue/40 font-bold text-xs flex items-center justify-center gap-2 transition-colors"
                 >
                   <span>📂</span>
                   <span>백업 파일 선택 및 복원</span>
@@ -1551,7 +1551,7 @@ export default function FilterSettingsModal({
                     role="switch"
                     aria-checked={dailyReminder}
                     aria-label="매일 기록 알림 토글"
-                    className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden ${
                       dailyReminder ? "bg-terminal-green" : "bg-[#080a0f] border-terminal-border/80"
                     }`}
                   >
@@ -1572,14 +1572,14 @@ export default function FilterSettingsModal({
                     <span>⚡</span> 24시간 백그라운드 무제한 동작 설정
                   </h3>
                   {permStatus.battery ? (
-                    <span className="px-2.5 py-1 rounded bg-terminal-green/10 text-terminal-green border border-terminal-green/30 text-[10px] font-bold flex items-center gap-1 shrink-0 whitespace-nowrap">
+                    <span className="px-2.5 py-1 rounded-sm bg-terminal-green/10 text-terminal-green border border-terminal-green/30 text-[10px] font-bold flex items-center gap-1 shrink-0 whitespace-nowrap">
                       <span>✓</span>
                       <span>설정 완료</span>
                     </span>
                   ) : (
                     <button
                       onClick={() => handleOpenSetting("battery")}
-                      className="px-2.5 py-1 rounded bg-terminal-yellow/20 text-terminal-yellow hover:bg-terminal-yellow/30 border border-terminal-yellow/40 text-[10px] font-bold transition-colors shrink-0 whitespace-nowrap"
+                      className="px-2.5 py-1 rounded-sm bg-terminal-yellow/20 text-terminal-yellow hover:bg-terminal-yellow/30 border border-terminal-yellow/40 text-[10px] font-bold transition-colors shrink-0 whitespace-nowrap"
                     >
                       앱 설정 열기 →
                     </button>
@@ -1592,20 +1592,20 @@ export default function FilterSettingsModal({
 
                 {/* 스마트폰별 3단계 안내 박스 */}
                 {!permStatus.battery ? (
-                  <div className="bg-[#080a0f] border border-terminal-border/40 p-3 rounded text-[11px] text-terminal-gray flex flex-col gap-1.5 font-mono">
+                  <div className="bg-[#080a0f] border border-terminal-border/40 p-3 rounded-sm text-[11px] text-terminal-gray flex flex-col gap-1.5 font-mono">
                     <div className="text-terminal-white font-bold text-[11px] mb-0.5">📱 설정 방법 (갤럭시 / One UI 기준):</div>
                     <div>1. 위의 <strong className="text-terminal-yellow">[앱 설정 열기 →]</strong> 버튼을 터치합니다.</div>
                     <div>2. 아래로 스크롤하여 <strong className="text-terminal-white">[배터리]</strong> 메뉴로 들어갑니다.</div>
                     <div>3. <strong className="text-terminal-green">[제한 없음 (Unrestricted)]</strong>을 선택합니다.</div>
                   </div>
                 ) : (
-                  <div className="bg-terminal-green/5 border border-terminal-green/20 p-2.5 rounded text-[11px] text-terminal-green flex items-center gap-2 font-mono">
+                  <div className="bg-terminal-green/5 border border-terminal-green/20 p-2.5 rounded-sm text-[11px] text-terminal-green flex items-center gap-2 font-mono">
                     <span>✓</span>
                     <span>배터리 최적화가 제외되어 화면이 꺼져도 24시간 끊김 없이 동작합니다.</span>
                   </div>
                 )}
 
-                <div className="flex items-center justify-between gap-2 p-2.5 rounded bg-[#080a0f] border border-terminal-border/40 text-xs mt-0.5">
+                <div className="flex items-center justify-between gap-2 p-2.5 rounded-sm bg-[#080a0f] border border-terminal-border/40 text-xs mt-0.5">
                   <span className="text-terminal-white font-mono min-w-0 flex-1">실시간 배터리 상태</span>
                   {permStatus.battery ? (
                     <span className="text-terminal-green font-bold flex items-center gap-1 shrink-0 whitespace-nowrap">
@@ -1638,7 +1638,7 @@ export default function FilterSettingsModal({
                   </button>
                 </div>
 
-                <div className="flex items-center justify-between gap-2 p-2.5 rounded bg-[#080a0f] border border-terminal-border/30">
+                <div className="flex items-center justify-between gap-2 p-2.5 rounded-sm bg-[#080a0f] border border-terminal-border/30">
                   <div className="flex flex-col min-w-0 flex-1">
                     <span className="text-terminal-white font-bold text-xs">사용 정보 접근</span>
                     <span className="text-[10px] text-terminal-gray">어떤 앱이 언제 앞에 있었는지만 기록</span>
@@ -1651,7 +1651,7 @@ export default function FilterSettingsModal({
                   ) : (
                     <button
                       onClick={() => handleOpenSetting("usage")}
-                      className="px-2 py-1 rounded bg-terminal-yellow/20 text-terminal-yellow hover:bg-terminal-yellow/30 border border-terminal-yellow/40 text-[10px] font-bold shrink-0 whitespace-nowrap"
+                      className="px-2 py-1 rounded-sm bg-terminal-yellow/20 text-terminal-yellow hover:bg-terminal-yellow/30 border border-terminal-yellow/40 text-[10px] font-bold shrink-0 whitespace-nowrap"
                     >
                       설정하러 가기
                     </button>
@@ -1661,7 +1661,7 @@ export default function FilterSettingsModal({
                 {flavor === "full" && (
                 <div className="flex flex-col gap-2 mt-1">
                   {/* 1. 접근성 서비스 */}
-                  <div className="flex items-center justify-between gap-2 p-2.5 rounded bg-[#080a0f] border border-terminal-border/30">
+                  <div className="flex items-center justify-between gap-2 p-2.5 rounded-sm bg-[#080a0f] border border-terminal-border/30">
                     <div className="flex flex-col min-w-0 flex-1">
                       <span className="text-terminal-white font-bold text-xs">1. 접근성 서비스 (LifeCommit)</span>
                       <span className="text-[10px] text-terminal-gray">메신저 답장 및 위치 기록</span>
@@ -1674,7 +1674,7 @@ export default function FilterSettingsModal({
                     ) : (
                       <button
                         onClick={() => handleOpenSetting("accessibility")}
-                        className="px-2 py-1 rounded bg-terminal-yellow/20 text-terminal-yellow hover:bg-terminal-yellow/30 border border-terminal-yellow/40 text-[10px] font-bold shrink-0 whitespace-nowrap"
+                        className="px-2 py-1 rounded-sm bg-terminal-yellow/20 text-terminal-yellow hover:bg-terminal-yellow/30 border border-terminal-yellow/40 text-[10px] font-bold shrink-0 whitespace-nowrap"
                       >
                         설정하러 가기
                       </button>
@@ -1682,7 +1682,7 @@ export default function FilterSettingsModal({
                   </div>
 
                   {/* 2. 알림 접근 권한 */}
-                  <div className="flex items-center justify-between gap-2 p-2.5 rounded bg-[#080a0f] border border-terminal-border/30">
+                  <div className="flex items-center justify-between gap-2 p-2.5 rounded-sm bg-[#080a0f] border border-terminal-border/30">
                     <div className="flex flex-col min-w-0 flex-1">
                       <span className="text-terminal-white font-bold text-xs">2. 알림 접근 허용 (LifeCommit)</span>
                       <span className="text-[10px] text-terminal-gray">메신저(카카오톡/텔레그램 등) 답장 기록</span>
@@ -1695,7 +1695,7 @@ export default function FilterSettingsModal({
                     ) : (
                       <button
                         onClick={() => handleOpenSetting("notification")}
-                        className="px-2 py-1 rounded bg-terminal-yellow/20 text-terminal-yellow hover:bg-terminal-yellow/30 border border-terminal-yellow/40 text-[10px] font-bold shrink-0 whitespace-nowrap"
+                        className="px-2 py-1 rounded-sm bg-terminal-yellow/20 text-terminal-yellow hover:bg-terminal-yellow/30 border border-terminal-yellow/40 text-[10px] font-bold shrink-0 whitespace-nowrap"
                       >
                         설정하러 가기
                       </button>
@@ -1703,7 +1703,7 @@ export default function FilterSettingsModal({
                   </div>
 
                   {/* 3. 위치(GPS) 권한 */}
-                  <div className="flex items-center justify-between gap-2 p-2.5 rounded bg-[#080a0f] border border-terminal-border/30">
+                  <div className="flex items-center justify-between gap-2 p-2.5 rounded-sm bg-[#080a0f] border border-terminal-border/30">
                     <div className="flex flex-col min-w-0 flex-1">
                       <span className="text-terminal-white font-bold text-xs">3. 위치(GPS) 권한</span>
                       <span className="text-[10px] text-terminal-gray">지오펜스 장소 감지</span>
@@ -1716,7 +1716,7 @@ export default function FilterSettingsModal({
                     ) : (
                       <button
                         onClick={() => handleOpenSetting("app_info")}
-                        className="px-2 py-1 rounded bg-terminal-yellow/20 text-terminal-yellow hover:bg-terminal-yellow/30 border border-terminal-yellow/40 text-[10px] font-bold shrink-0 whitespace-nowrap"
+                        className="px-2 py-1 rounded-sm bg-terminal-yellow/20 text-terminal-yellow hover:bg-terminal-yellow/30 border border-terminal-yellow/40 text-[10px] font-bold shrink-0 whitespace-nowrap"
                       >
                         권한 설정
                       </button>
@@ -1724,7 +1724,7 @@ export default function FilterSettingsModal({
                   </div>
 
                   {/* 위치 항상 허용 (선택) */}
-                  <div className="flex items-center justify-between gap-2 p-2.5 rounded bg-[#080a0f] border border-terminal-border/30">
+                  <div className="flex items-center justify-between gap-2 p-2.5 rounded-sm bg-[#080a0f] border border-terminal-border/30">
                     <div className="flex flex-col min-w-0 flex-1">
                       <span className="text-terminal-white font-bold text-xs">위치 항상 허용 (선택)</span>
                       <span className="text-[10px] text-terminal-gray">앱을 닫아도 위치 기록 · 설정 → 권한 → 위치 → 항상 허용</span>
@@ -1737,7 +1737,7 @@ export default function FilterSettingsModal({
                     ) : (
                       <button
                         onClick={() => handleOpenSetting("app_info")}
-                        className="px-2 py-1 rounded bg-terminal-yellow/20 text-terminal-yellow hover:bg-terminal-yellow/30 border border-terminal-yellow/40 text-[10px] font-bold shrink-0 whitespace-nowrap"
+                        className="px-2 py-1 rounded-sm bg-terminal-yellow/20 text-terminal-yellow hover:bg-terminal-yellow/30 border border-terminal-yellow/40 text-[10px] font-bold shrink-0 whitespace-nowrap"
                       >
                         권한 설정
                       </button>
@@ -1745,7 +1745,7 @@ export default function FilterSettingsModal({
                   </div>
 
                   {/* 연락처 (선택) */}
-                  <div className="flex items-center justify-between gap-2 p-2.5 rounded bg-[#080a0f] border border-terminal-border/30">
+                  <div className="flex items-center justify-between gap-2 p-2.5 rounded-sm bg-[#080a0f] border border-terminal-border/30">
                     <div className="flex flex-col min-w-0 flex-1">
                       <span className="text-terminal-white font-bold text-xs">연락처 (선택)</span>
                       <span className="text-[10px] text-terminal-gray">통화·문자에 번호 대신 이름 표시</span>
@@ -1762,7 +1762,7 @@ export default function FilterSettingsModal({
                           await CallLogPlugin.requestPermissions({ permissions: ["contacts"] });
                           await checkPermissions();
                         }}
-                        className="px-2 py-1 rounded bg-terminal-yellow/20 text-terminal-yellow hover:bg-terminal-yellow/30 border border-terminal-yellow/40 text-[10px] font-bold shrink-0 whitespace-nowrap"
+                        className="px-2 py-1 rounded-sm bg-terminal-yellow/20 text-terminal-yellow hover:bg-terminal-yellow/30 border border-terminal-yellow/40 text-[10px] font-bold shrink-0 whitespace-nowrap"
                       >
                         허용하기
                       </button>
@@ -1770,7 +1770,7 @@ export default function FilterSettingsModal({
                   </div>
 
                   {/* 4. 통화 기록 권한 */}
-                  <div className="flex items-center justify-between gap-2 p-2.5 rounded bg-[#080a0f] border border-terminal-border/30">
+                  <div className="flex items-center justify-between gap-2 p-2.5 rounded-sm bg-[#080a0f] border border-terminal-border/30">
                     <div className="flex flex-col min-w-0 flex-1">
                       <span className="text-terminal-white font-bold text-xs">4. 통화 기록 권한</span>
                       <span className="text-[10px] text-terminal-gray">통화 내역 커밋 연동</span>
@@ -1783,7 +1783,7 @@ export default function FilterSettingsModal({
                     ) : (
                       <button
                         onClick={() => handleRequestRuntimePermission("callLog")}
-                        className="px-2 py-1 rounded bg-terminal-yellow/20 text-terminal-yellow hover:bg-terminal-yellow/30 border border-terminal-yellow/40 text-[10px] font-bold shrink-0 whitespace-nowrap"
+                        className="px-2 py-1 rounded-sm bg-terminal-yellow/20 text-terminal-yellow hover:bg-terminal-yellow/30 border border-terminal-yellow/40 text-[10px] font-bold shrink-0 whitespace-nowrap"
                       >
                         권한 설정
                       </button>
@@ -1791,7 +1791,7 @@ export default function FilterSettingsModal({
                   </div>
 
                   {/* 5. 문자(SMS) 권한 */}
-                  <div className="flex items-center justify-between gap-2 p-2.5 rounded bg-[#080a0f] border border-terminal-border/30">
+                  <div className="flex items-center justify-between gap-2 p-2.5 rounded-sm bg-[#080a0f] border border-terminal-border/30">
                     <div className="flex flex-col min-w-0 flex-1">
                       <span className="text-terminal-white font-bold text-xs">5. 문자(SMS) 권한</span>
                       <span className="text-[10px] text-terminal-gray">문자 내역 커밋 연동</span>
@@ -1804,7 +1804,7 @@ export default function FilterSettingsModal({
                     ) : (
                       <button
                         onClick={() => handleRequestRuntimePermission("sms")}
-                        className="px-2 py-1 rounded bg-terminal-yellow/20 text-terminal-yellow hover:bg-terminal-yellow/30 border border-terminal-yellow/40 text-[10px] font-bold shrink-0 whitespace-nowrap"
+                        className="px-2 py-1 rounded-sm bg-terminal-yellow/20 text-terminal-yellow hover:bg-terminal-yellow/30 border border-terminal-yellow/40 text-[10px] font-bold shrink-0 whitespace-nowrap"
                       >
                         권한 설정
                       </button>
@@ -1812,7 +1812,7 @@ export default function FilterSettingsModal({
                   </div>
 
                   {/* 6. 사진 권한 */}
-                  <div className="flex items-center justify-between gap-2 p-2.5 rounded bg-[#080a0f] border border-terminal-border/30">
+                  <div className="flex items-center justify-between gap-2 p-2.5 rounded-sm bg-[#080a0f] border border-terminal-border/30">
                     <div className="flex flex-col min-w-0 flex-1">
                       <span className="text-terminal-white font-bold text-xs">6. 사진 권한</span>
                       <span className="text-[10px] text-terminal-gray">촬영/저장 사진 커밋 연동</span>
@@ -1825,7 +1825,7 @@ export default function FilterSettingsModal({
                     ) : (
                       <button
                         onClick={() => handleRequestRuntimePermission("photo")}
-                        className="px-2 py-1 rounded bg-terminal-yellow/20 text-terminal-yellow hover:bg-terminal-yellow/30 border border-terminal-yellow/40 text-[10px] font-bold shrink-0 whitespace-nowrap"
+                        className="px-2 py-1 rounded-sm bg-terminal-yellow/20 text-terminal-yellow hover:bg-terminal-yellow/30 border border-terminal-yellow/40 text-[10px] font-bold shrink-0 whitespace-nowrap"
                       >
                         권한 설정
                       </button>
@@ -1854,7 +1854,7 @@ export default function FilterSettingsModal({
           <button
             onClick={onClose}
             disabled={isSaving}
-            className="px-4 py-1.5 rounded border border-terminal-border text-terminal-gray hover:bg-terminal-surface transition-colors text-xs font-semibold"
+            className="px-4 py-1.5 rounded-sm border border-terminal-border text-terminal-gray hover:bg-terminal-surface transition-colors text-xs font-semibold"
           >
             닫기
           </button>
@@ -1862,7 +1862,7 @@ export default function FilterSettingsModal({
             <button
               onClick={handleSaveFilters}
               disabled={isSaving}
-              className="px-4 py-1.5 rounded bg-terminal-green text-black hover:bg-opacity-90 transition-colors text-xs font-bold flex items-center gap-1.5"
+              className="px-4 py-1.5 rounded-sm bg-terminal-green text-black hover:bg-terminal-green/90 transition-colors text-xs font-bold flex items-center gap-1.5"
             >
               {isSaving ? "적용 중..." : "필터 저장 및 적용"}
             </button>

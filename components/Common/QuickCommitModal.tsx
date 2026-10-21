@@ -50,7 +50,7 @@ export default function QuickCommitModal({ isOpen, onClose, onSuccess }: QuickCo
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs animate-fade-in"
       onClick={onClose}
     >
       <div
@@ -67,7 +67,7 @@ export default function QuickCommitModal({ isOpen, onClose, onSuccess }: QuickCo
           </div>
           <button
             onClick={onClose}
-            className="text-terminal-gray hover:text-terminal-white p-1 rounded hover:bg-terminal-surface transition-colors"
+            className="text-terminal-gray hover:text-terminal-white p-1 rounded-sm hover:bg-terminal-surface transition-colors"
           >
             ✕
           </button>
@@ -101,7 +101,7 @@ export default function QuickCommitModal({ isOpen, onClose, onSuccess }: QuickCo
             <label className="text-[11px] text-terminal-gray font-semibold">
               커밋 메시지 (Subject) <span className="text-terminal-green">*</span>
             </label>
-            <div className="flex items-center bg-[#181d26] border border-terminal-border rounded px-3 py-2 focus-within:border-terminal-green transition-colors">
+            <div className="flex items-center bg-[#181d26] border border-terminal-border rounded-sm px-3 py-2 focus-within:border-terminal-green transition-colors">
               <span className="text-terminal-green mr-2 text-xs font-bold">$</span>
               <input
                 type="text"
@@ -110,7 +110,7 @@ export default function QuickCommitModal({ isOpen, onClose, onSuccess }: QuickCo
                 placeholder="feat: 클린코드 3장 독서 완료"
                 required
                 autoFocus
-                className="bg-transparent text-terminal-white text-xs w-full outline-none placeholder:text-terminal-gray/40 font-mono"
+                className="bg-transparent text-terminal-white text-xs w-full outline-hidden placeholder:text-terminal-gray/40 font-mono"
               />
             </div>
           </div>
@@ -167,7 +167,7 @@ export default function QuickCommitModal({ isOpen, onClose, onSuccess }: QuickCo
               onChange={(e) => setBody(e.target.value)}
               placeholder="상세한 내용이나 느낀 점을 기록하세요..."
               rows={3}
-              className="bg-[#181d26] border border-terminal-border rounded p-2.5 text-terminal-white text-xs outline-none focus:border-terminal-green transition-colors resize-none placeholder:text-terminal-gray/40 font-mono"
+              className="bg-[#181d26] border border-terminal-border rounded-sm p-2.5 text-terminal-white text-xs outline-hidden focus:border-terminal-green transition-colors resize-none placeholder:text-terminal-gray/40 font-mono"
             />
           </div>
 
@@ -176,14 +176,14 @@ export default function QuickCommitModal({ isOpen, onClose, onSuccess }: QuickCo
             <button
               type="button"
               onClick={onClose}
-              className="px-3.5 py-1.5 rounded text-xs text-terminal-gray hover:text-terminal-white hover:bg-terminal-surface transition-colors"
+              className="px-3.5 py-1.5 rounded-sm text-xs text-terminal-gray hover:text-terminal-white hover:bg-terminal-surface transition-colors"
             >
               취소
             </button>
             <button
               type="submit"
               disabled={isSubmitting || !subject.trim()}
-              className="px-4 py-1.5 rounded bg-terminal-green/20 text-terminal-green hover:bg-terminal-green/30 border border-terminal-green/50 text-xs font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5"
+              className="px-4 py-1.5 rounded-sm bg-terminal-green/20 text-terminal-green hover:bg-terminal-green/30 border border-terminal-green/50 text-xs font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5"
             >
               {isSubmitting ? "커밋 중..." : "git commit ✓"}
             </button>

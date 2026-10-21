@@ -277,6 +277,300 @@ class LifeCommitPlugin : Plugin() {
     }
 
     /**
+     * 이미지(PNG base64)를 공유(Intent.ACTION_SEND)하거나 갤러리(MediaStore Pictures/LifeCommit)에 저장
+     */
+    @PluginMethod
+    fun shareImage(call: PluginCall) {
+        val ctx = context ?: return call.reject("Context is null")
+        val filename = call.getString("filename") ?: ""
+        if (filename.isEmpty() || filename.contains('/') || filename.contains('\\') || filename.contains("..") || !filename.endsWith(".png", ignoreCase = true)) {
+            return call.reject("invalid filename")
+        }
+
+        val rawBase64 = call.getString("base64") ?: ""
+        val cleanBase64 = if (rawBase64.contains(",")) rawBase64.substringAfter(",") else rawBase64
+        val bytes = try {
+            android.util.Base64.decode(cleanBase64, android.util.Base64.DEFAULT)
+        } catch (e: Exception) {
+            return call.reject("invalid base64: ${e.message}")
+        }
+
+        val mode = call.getString("mode") ?: "share"
+
+        if (mode == "share") {
+            try {
+                // one folder per share so a later share never removes or overwrites a file the previous target
+                // app may still be reading; folders older than an hour are cleaned up
+                val shareDir = File(ctx.cacheDir, "share_images").apply { if (!exists()) mkdirs() }
+                val now = System.currentTimeMillis()
+                try {
+                    shareDir.listFiles()?.forEach { if (now - it.lastModified() > 3_600_000L) it.deleteRecursively() }
+                } catch (ignored: Exception) {}
+
+                val imgDir = File(shareDir, "${now}_${System.nanoTime()}").apply { mkdirs() }
+                val imgFile = File(imgDir, filename)
+                FileOutputStream(imgFile).use { fos ->
+                    fos.write(bytes)
+                }
+
+                val contentUri = FileProvider.getUriForFile(
+                    ctx,
+                    "${ctx.packageName}.fileprovider",
+                    imgFile
+                )
+
+                val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                    type = "image/png"
+                    putExtra(Intent.EXTRA_STREAM, contentUri)
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+
+                val chooser = Intent.createChooser(shareIntent, "이미지 공유").apply {
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+                ctx.startActivity(chooser)
+
+                val ret = JSObject()
+                ret.put("success", true)
+                ret.put("path", imgFile.absolutePath)
+                ret.put("filename", filename)
+                call.resolve(ret)
+            } catch (e: Exception) {
+                call.reject("이미지 공유 실패: ${e.message}")
+            }
+        } else if (mode == "save") {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+                return call.reject("저장은 Android 10 이상")
+            }
+
+            val resolver = ctx.contentResolver
+            val values = android.content.ContentValues().apply {
+                put(android.provider.MediaStore.Images.Media.DISPLAY_NAME, filename)
+                put(android.provider.MediaStore.Images.Media.MIME_TYPE, "image/png")
+                put(android.provider.MediaStore.Images.Media.RELATIVE_PATH, "Pictures/LifeCommit")
+                put(android.provider.MediaStore.Images.Media.IS_PENDING, 1)
+            }
+
+            var uri: android.net.Uri? = null
+            try {
+                uri = resolver.insert(android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
+                    ?: throw java.io.IOException("Failed to create MediaStore entry")
+                resolver.openOutputStream(uri)?.use { os ->
+                    os.write(bytes)
+                } ?: throw java.io.IOException("Failed to open output stream")
+
+                values.clear()
+                values.put(android.provider.MediaStore.Images.Media.IS_PENDING, 0)
+                // a pending item stays hidden from the gallery, so not publishing it is a failure
+                if (resolver.update(uri, values, null, null) < 1) throw java.io.IOException("Failed to publish image")
+
+                val ret = JSObject()
+                ret.put("success", true)
+                ret.put("uri", uri.toString())
+                ret.put("filename", filename)
+                call.resolve(ret)
+            } catch (e: Exception) {
+                try {
+                    uri?.let { resolver.delete(it, null, null) }
+                } catch (ignored: Exception) {}
+                call.reject("사진 저장 실패: ${e.message}")
+            }
+        } else {
+            call.reject("invalid mode: $mode")
+        }
+    }
+
+    private val shareMediaIdRegex = Regex("^[A-Za-z0-9_-]{1,64}$")
+
+    /**
+     * 비디오/미디어 조각(base64)을 임시 .part 파일에 이어 쓰기
+     */
+    @PluginMethod
+    fun appendShareChunk(call: PluginCall) {
+        val ctx = context ?: return call.reject("Context is null")
+        val id = call.getString("id") ?: ""
+        if (!id.matches(shareMediaIdRegex)) {
+            return call.reject("invalid id")
+        }
+
+        val rawBase64 = call.getString("base64") ?: ""
+        val cleanBase64 = if (rawBase64.contains(",")) rawBase64.substringAfter(",") else rawBase64
+        val bytes = try {
+            if (cleanBase64.isNotEmpty()) {
+                android.util.Base64.decode(cleanBase64, android.util.Base64.DEFAULT)
+            } else {
+                ByteArray(0)
+            }
+        } catch (e: Exception) {
+            return call.reject("invalid base64: ${e.message}")
+        }
+
+        try {
+            val shareMediaDir = File(ctx.cacheDir, "share_media").apply { if (!exists()) mkdirs() }
+            val partFile = File(shareMediaDir, "$id.part")
+            FileOutputStream(partFile, true).use { fos ->
+                fos.write(bytes)
+            }
+            val ret = JSObject()
+            ret.put("success", true)
+            call.resolve(ret)
+        } catch (e: Exception) {
+            call.reject("청크 저장 실패: ${e.message}")
+        }
+    }
+
+    /**
+     * 임시 .part 파일에 수집된 미디어를 공유(Intent.ACTION_SEND)하거나 Pictures/LifeCommit에 저장
+     */
+    @PluginMethod
+    fun finishShareMedia(call: PluginCall) {
+        val ctx = context ?: return call.reject("Context is null")
+        val id = call.getString("id") ?: ""
+        if (!id.matches(shareMediaIdRegex)) {
+            return call.reject("invalid id")
+        }
+
+        val filename = call.getString("filename") ?: ""
+        if (filename.isEmpty() || filename.contains('/') || filename.contains('\\') || filename.contains("..") || !filename.endsWith(".mp4", ignoreCase = true)) {
+            val shareMediaDir = File(ctx.cacheDir, "share_media")
+            File(shareMediaDir, "$id.part").delete()
+            return call.reject("invalid filename")
+        }
+
+        val mime = call.getString("mime") ?: "video/mp4"
+        val mode = call.getString("mode") ?: "share"
+
+        val shareMediaDir = File(ctx.cacheDir, "share_media")
+        val partFile = File(shareMediaDir, "$id.part")
+        if (!partFile.exists() || partFile.length() == 0L) {
+            partFile.delete()
+            return call.reject("part file not found or empty")
+        }
+
+        if (mode == "share") {
+            var mediaDir: File? = null
+            try {
+                val now = System.currentTimeMillis()
+                try {
+                    shareMediaDir.listFiles()?.forEach {
+                        if (now - it.lastModified() > 3_600_000L) {
+                            it.deleteRecursively()
+                        }
+                    }
+                } catch (ignored: Exception) {}
+
+                val dir = File(shareMediaDir, "${now}_${System.nanoTime()}").apply { mkdirs() }
+                mediaDir = dir
+                val targetFile = File(dir, filename)
+                val moved = partFile.renameTo(targetFile)
+                if (!moved) {
+                    partFile.inputStream().use { input ->
+                        targetFile.outputStream().use { output ->
+                            input.copyTo(output)
+                        }
+                    }
+                    partFile.delete()
+                }
+
+                val contentUri = FileProvider.getUriForFile(
+                    ctx,
+                    "${ctx.packageName}.fileprovider",
+                    targetFile
+                )
+
+                val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                    type = if (mime.isNotEmpty()) mime else "video/mp4"
+                    putExtra(Intent.EXTRA_STREAM, contentUri)
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+
+                val chooser = Intent.createChooser(shareIntent, "영상 공유").apply {
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+                ctx.startActivity(chooser)
+
+                val ret = JSObject()
+                ret.put("success", true)
+                ret.put("path", targetFile.absolutePath)
+                ret.put("filename", filename)
+                call.resolve(ret)
+            } catch (e: Exception) {
+                partFile.delete()
+                mediaDir?.deleteRecursively()
+                call.reject("영상 공유 실패: ${e.message}")
+            }
+        } else if (mode == "save") {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+                partFile.delete()
+                return call.reject("저장은 Android 10 이상")
+            }
+
+            val resolver = ctx.contentResolver
+            val values = android.content.ContentValues().apply {
+                put(android.provider.MediaStore.Video.Media.DISPLAY_NAME, filename)
+                put(android.provider.MediaStore.Video.Media.MIME_TYPE, if (mime.isNotEmpty()) mime else "video/mp4")
+                put(android.provider.MediaStore.Video.Media.RELATIVE_PATH, "Pictures/LifeCommit")
+                put(android.provider.MediaStore.Video.Media.IS_PENDING, 1)
+            }
+
+            var uri: android.net.Uri? = null
+            try {
+                uri = resolver.insert(android.provider.MediaStore.Video.Media.EXTERNAL_CONTENT_URI, values)
+                    ?: throw java.io.IOException("Failed to create MediaStore entry")
+
+                partFile.inputStream().use { input ->
+                    resolver.openOutputStream(uri)?.use { output ->
+                        input.copyTo(output)
+                    } ?: throw java.io.IOException("Failed to open output stream")
+                }
+
+                values.clear()
+                values.put(android.provider.MediaStore.Video.Media.IS_PENDING, 0)
+                if (resolver.update(uri, values, null, null) < 1) throw java.io.IOException("Failed to publish video")
+
+                partFile.delete()
+
+                val ret = JSObject()
+                ret.put("success", true)
+                ret.put("uri", uri.toString())
+                ret.put("filename", filename)
+                call.resolve(ret)
+            } catch (e: Exception) {
+                try {
+                    uri?.let { resolver.delete(it, null, null) }
+                } catch (ignored: Exception) {}
+                partFile.delete()
+                call.reject("영상 저장 실패: ${e.message}")
+            }
+        } else {
+            partFile.delete()
+            call.reject("invalid mode: $mode")
+        }
+    }
+
+    /**
+     * 공유/저장 취소 또는 실패 시 생성 중이던 .part 파일 삭제
+     */
+    @PluginMethod
+    fun cancelShareMedia(call: PluginCall) {
+        val ctx = context ?: return call.reject("Context is null")
+        val id = call.getString("id") ?: ""
+        if (!id.matches(shareMediaIdRegex)) {
+            return call.reject("invalid id")
+        }
+        val shareMediaDir = File(ctx.cacheDir, "share_media")
+        val partFile = File(shareMediaDir, "$id.part")
+        if (partFile.exists()) {
+            partFile.delete()
+        }
+        val ret = JSObject()
+        ret.put("success", true)
+        call.resolve(ret)
+    }
+
+    /**
      * 앱의 실제 최초 설치 시각을 반환한다. 재설치 시에는 값이 새로 갱신되므로,
      * raw_events가 비어 있는 최초/재설치 상태에서 동기화 커서의 하한선(floor)으로
      * 사용하면 기기에 남아있던 설치 이전 통화/문자/사진 이력이 통째로 유입되는

@@ -38,7 +38,7 @@ export default function PhotoDetailViewer({ body, onToast }: PhotoDetailViewerPr
       <div className="flex flex-col gap-1 pb-1 border-b border-terminal-border/40">
         <button
           onClick={handleOpenPhoto}
-          className="text-[10px] font-mono text-[#ff79c6] cursor-pointer hover:underline flex items-center gap-1.5 active:bg-[#ff79c6]/10 px-1 py-1 rounded -mx-1 transition-colors text-left"
+          className="text-[10px] font-mono text-[#ff79c6] cursor-pointer hover:underline flex items-center gap-1.5 active:bg-[#ff79c6]/10 px-1 py-1 rounded-sm -mx-1 transition-colors text-left"
           title="클릭하여 갤러리에서 보기"
         >
           🖼️ 갤러리에서 첫 번째 사진 보기{countText}

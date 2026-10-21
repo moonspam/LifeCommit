@@ -1,6 +1,20 @@
-import { useEffect, useState, useMemo } from 'react';
-import { getDailyCommitCounts } from '@/lib/queries';
+import { useEffect, useState, useMemo, useRef } from 'react';
+import { getDailyScreenSeconds } from '@/lib/queries';
 import { subscribe, EVENT_COMMITS_UPDATED } from '@/lib/events';
+import {
+  GRASS_LEVELS,
+  levelOf,
+  formatScreenTimeShort,
+  formatScreenTimeTitle,
+} from '@/lib/grassLevels';
+import {
+  GrassCell3D,
+  calculateGrass3DBounds,
+  drawGrass3D,
+  renderGrassToOffscreenCanvas,
+} from '@/lib/grassCanvas';
+import ShareImageButtons from '../Common/ShareImageButtons';
+import { getGrassExportFilename, shareOrSaveCanvas } from '@/lib/imageExport';
 
 interface Props {
   year: number;
@@ -10,33 +24,70 @@ interface Props {
   isReady?: boolean;
 }
 
-const LEVEL_COLORS = ['#161b22', '#0e4429', '#006d32', '#26a641', '#39d353'];
 const DAY_LABELS = ['일', '월', '화', '수', '목', '금', '토'];
-
-function getLevel(count: number) {
-  if (count === 0) return 0;
-  if (count < 5) return 1;
-  if (count < 15) return 2;
-  if (count < 30) return 3;
-  return 4;
-}
 
 export default function ContributionGraph({ year, month, onDayClick, resumeTick, isReady = false }: Props) {
   const [data, setData] = useState<Record<string, number>>({});
   
+  // 3D/2D 토글 상태 (localStorage 기억, rules-of-hooks 준수를 위해 조기 반환보다 상단에 선언)
+  const [viewMode, setViewModeState] = useState<'2D' | '3D'>(() => {
+    if (typeof window === 'undefined') return '2D';
+    try {
+      const saved = localStorage.getItem('lifecommit_grass_view_mode');
+      if (saved === '3D' || saved === '2D') return saved;
+    } catch {
+      // ignore
+    }
+    return '2D';
+  });
+
+  const setViewMode = (mode: '2D' | '3D') => {
+    setViewModeState(mode);
+    try {
+      localStorage.setItem('lifecommit_grass_view_mode', mode);
+    } catch {
+      // ignore
+    }
+  };
+
+  const [toast, setToast] = useState<{ message: string; isError?: boolean } | null>(null);
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const showToast = (message: string, isError = false) => {
+    setToast({ message, isError });
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    toastTimerRef.current = setTimeout(() => setToast(null), 2500);
+  };
+
+  const handleExport = async (mode: 'share' | 'save') => {
+    try {
+      const canvas = renderGrassToOffscreenCanvas({
+        type: viewMode,
+        year,
+        month,
+        data,
+      });
+      const filename = getGrassExportFilename(year, month);
+      const res = await shareOrSaveCanvas({ canvas, filename, mode });
+      showToast(res.message, !res.success);
+    } catch (err: any) {
+      showToast(err?.message || '내보내기 실패', true);
+    }
+  };
+
   // 잔디밭은 일별 통계이므로 실시간 폴링이 불필요. 이벤트 기반으로 갱신.
   useEffect(() => {
     if (!isReady) return;
     let active = true;
     const load = async () => {
       try {
-        const counts = await getDailyCommitCounts(year);
+        const screenSeconds = await getDailyScreenSeconds(year);
         if (!active) return;
         const map: Record<string, number> = {};
-        counts.forEach(c => { map[c.date] = c.count; });
+        screenSeconds.forEach(c => { map[c.date] = c.sec; });
         setData(map);
       } catch (err) {
-        console.error("[Stats] Failed to load commit counts:", err);
+        console.error("[Stats] Failed to load daily screen seconds:", err);
       }
     };
     
@@ -58,18 +109,182 @@ export default function ContributionGraph({ year, month, onDayClick, resumeTick,
 
   // ── 월간 달력 모드 ──
   if (month) {
-    return <MonthCalendar year={year} month={month} data={data} onDayClick={onDayClick} />;
+    return (
+      <MonthCalendar
+        year={year}
+        month={month}
+        data={data}
+        onDayClick={onDayClick}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
+        onExport={handleExport}
+        toast={toast}
+      />
+    );
   }
 
   // ── 연간 GitHub 스타일 잔디 모드 ──
-  return <YearGraph year={year} data={data} onDayClick={onDayClick} />;
+  return (
+    <YearGraph
+      year={year}
+      data={data}
+      onDayClick={onDayClick}
+      viewMode={viewMode}
+      onViewModeChange={setViewMode}
+      onExport={handleExport}
+      toast={toast}
+    />
+  );
+}
+
+// ────────────────────────────────────────────────
+// 2D | 3D 토글 버튼 컴포넌트
+// ────────────────────────────────────────────────
+function ViewModeToggle({
+  viewMode,
+  onChange,
+}: {
+  viewMode: '2D' | '3D';
+  onChange: (mode: '2D' | '3D') => void;
+}) {
+  return (
+    <div className="flex items-center gap-0.5 bg-terminal-surface border border-terminal-border rounded-sm p-0.5 text-[10px]">
+      <button
+        type="button"
+        onClick={() => onChange('2D')}
+        className={`px-1.5 py-0.5 rounded transition-colors ${
+          viewMode === '2D'
+            ? 'bg-terminal-border text-white font-bold'
+            : 'text-terminal-gray hover:text-white'
+        }`}
+      >
+        2D
+      </button>
+      <span className="text-terminal-border">|</span>
+      <button
+        type="button"
+        onClick={() => onChange('3D')}
+        className={`px-1.5 py-0.5 rounded transition-colors ${
+          viewMode === '3D'
+            ? 'bg-terminal-border text-white font-bold'
+            : 'text-terminal-gray hover:text-white'
+        }`}
+      >
+        3D
+      </button>
+    </div>
+  );
+}
+
+// ────────────────────────────────────────────────
+// 3D 캔버스 렌더러 컴포넌트
+// ────────────────────────────────────────────────
+function Grass3DCanvas({
+  cells,
+  tileWidth = 20,
+  tileHeight,
+  maxBarHeight = 36,
+  padding = 16,
+  className = '',
+}: {
+  cells: GrassCell3D[];
+  tileWidth?: number;
+  tileHeight?: number;
+  maxBarHeight?: number;
+  padding?: number;
+  className?: string;
+}) {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  const bounds = useMemo(() => {
+    const tH = tileHeight ?? Math.round(tileWidth * 0.55);
+    return calculateGrass3DBounds(cells, tileWidth, tH, maxBarHeight, padding);
+  }, [cells, tileWidth, tileHeight, maxBarHeight, padding]);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const dpr = typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1;
+    canvas.width = Math.floor(bounds.width * dpr);
+    canvas.height = Math.floor(bounds.height * dpr);
+    canvas.style.width = `${bounds.width}px`;
+    canvas.style.maxWidth = '100%';
+    canvas.style.height = 'auto';
+
+    ctx.save();
+    ctx.scale(dpr, dpr);
+    drawGrass3D(ctx, cells, {
+      width: bounds.width,
+      height: bounds.height,
+      tileWidth,
+      tileHeight: tileHeight ?? Math.round(tileWidth * 0.55),
+      maxBarHeight,
+      originX: bounds.originX,
+      originY: bounds.originY,
+      backgroundColor: '#0d1117',
+      devicePixelRatio: dpr,
+    });
+    ctx.restore();
+  }, [cells, bounds, tileWidth, tileHeight, maxBarHeight]);
+
+  return (
+    <div className={`flex flex-col items-center gap-2 ${className}`}>
+      <canvas ref={canvasRef} className="block mx-auto rounded-xs max-w-full h-auto" style={{ maxWidth: '100%', height: 'auto' }} />
+      <div className="text-[10px] font-mono text-terminal-gray/60 text-center select-none">
+        날짜를 누르려면 2D로
+      </div>
+    </div>
+  );
+}
+
+// ────────────────────────────────────────────────
+// 범례 컴포넌트 (360px 폭 대응)
+// ────────────────────────────────────────────────
+function GrassLegend() {
+  return (
+    <div className="mt-3 pt-2 border-t border-terminal-border/50 flex flex-col gap-1 select-none">
+      <div className="grid grid-cols-10 gap-0.5 w-full">
+        {GRASS_LEVELS.map((info) => (
+          <div key={info.level} className="flex flex-col items-center gap-1 min-w-0">
+            <div
+              className="w-full h-2.5 rounded-[2px]"
+              style={{ backgroundColor: info.color }}
+              title={`${info.legendLabel} (${info.color})`}
+            />
+            <span className="text-[8px] font-mono text-terminal-gray leading-none whitespace-nowrap">
+              {info.legendLabel}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 // ────────────────────────────────────────────────
 // 월간 달력 그리드 컴포넌트
 // ────────────────────────────────────────────────
-function MonthCalendar({ year, month, data, onDayClick }: { 
-  year: number; month: number; data: Record<string, number>; onDayClick?: (date: string) => void 
+function MonthCalendar({
+  year,
+  month,
+  data,
+  onDayClick,
+  viewMode,
+  onViewModeChange,
+  onExport,
+  toast,
+}: { 
+  year: number;
+  month: number;
+  data: Record<string, number>;
+  onDayClick?: (date: string) => void;
+  viewMode: '2D' | '3D';
+  onViewModeChange: (mode: '2D' | '3D') => void;
+  onExport: (mode: 'share' | 'save') => void;
+  toast: { message: string; isError?: boolean } | null;
 }) {
   const { weeks, monthName } = useMemo(() => {
     const firstDay = new Date(year, month - 1, 1);
@@ -112,66 +327,121 @@ function MonthCalendar({ year, month, data, onDayClick }: {
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
   }, []);
 
+  // 3D용 cells 배열 생성
+  const month3DCells = useMemo(() => {
+    if (viewMode !== '3D') return [];
+    const list: GrassCell3D[] = [];
+    weeks.forEach((week, wIdx) => {
+      week.forEach((dayDate, dIdx) => {
+        if (!dayDate) return;
+        const sec = data[dayDate] || 0;
+        list.push({
+          date: dayDate,
+          sec,
+          col: dIdx, // 요일 (0 ~ 6)
+          row: wIdx, // 주 (0 ~ 5)
+        });
+      });
+    });
+    return list;
+  }, [weeks, data, viewMode]);
+
   return (
-    <div className="bg-[#0d1117] border border-[#30363d] rounded-md p-4 max-w-full">
-      <div className="text-[#8b949e] text-xs mb-3 font-mono flex items-center justify-between">
-        <span>{year}년 {monthName} Contributions</span>
+    <div className="bg-terminal-bg border border-terminal-border rounded-md p-4 max-w-full">
+      <div className="text-terminal-gray text-xs mb-3 font-mono flex items-center justify-between">
+        <span>{year}년 {monthName} 폰 사용시간</span>
+        <div className="flex items-center gap-1.5">
+          <ViewModeToggle viewMode={viewMode} onChange={onViewModeChange} />
+          <ShareImageButtons onShare={() => onExport('share')} onSave={() => onExport('save')} />
+        </div>
       </div>
 
-      {/* 요일 헤더 */}
-      <div className="grid grid-cols-7 gap-1 mb-1">
-        {DAY_LABELS.map((label, i) => (
-          <div key={`h-${i}`} className="text-center text-[10px] font-mono text-[#8b949e]/60 py-1">
-            {label}
+      {toast && (
+        <div
+          className={`mb-2 px-2.5 py-1 text-[11px] font-mono rounded border flex items-center justify-between transition-all ${
+            toast.isError
+              ? 'bg-terminal-red/10 border-terminal-red/40 text-terminal-red'
+              : 'bg-terminal-green/10 border-terminal-green/40 text-terminal-green'
+          }`}
+        >
+          <span>{toast.message}</span>
+        </div>
+      )}
+
+      {viewMode === '3D' ? (
+        <Grass3DCanvas
+          cells={month3DCells}
+          tileWidth={40}
+          tileHeight={22}
+          maxBarHeight={80}
+          padding={16}
+          className="my-1"
+        />
+      ) : (
+        <>
+          {/* 요일 헤더 */}
+          <div className="grid grid-cols-7 gap-1 mb-1">
+            {DAY_LABELS.map((label, i) => (
+              <div key={`h-${i}`} className="text-center text-[10px] font-mono text-terminal-gray/60 py-1">
+                {label}
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
 
-      {/* 날짜 그리드 */}
-      <div className="flex flex-col gap-1">
-        {weeks.map((week, wIdx) => (
-          <div key={`w-${wIdx}`} className="grid grid-cols-7 gap-1">
-            {week.map((dayDate, dIdx) => {
-              if (!dayDate) {
-                return <div key={`e-${wIdx}-${dIdx}`} className="aspect-square rounded-sm" />;
-              }
-              const count = data[dayDate] || 0;
-              const level = getLevel(count);
-              const dayNum = parseInt(dayDate.split('-')[2], 10);
-              const isToday = dayDate === today;
+          {/* 날짜 그리드 */}
+          <div className="flex flex-col gap-1">
+            {weeks.map((week, wIdx) => (
+              <div key={`w-${wIdx}`} className="grid grid-cols-7 gap-1">
+                {week.map((dayDate, dIdx) => {
+                  if (!dayDate) {
+                    return <div key={`e-${wIdx}-${dIdx}`} className="aspect-square rounded-xs" />;
+                  }
+                  const sec = data[dayDate] || 0;
+                  const level = levelOf(sec);
+                  const info = GRASS_LEVELS[level];
+                  const shortTime = formatScreenTimeShort(sec);
+                  const dayNum = parseInt(dayDate.split('-')[2], 10);
+                  const isToday = dayDate === today;
 
-              return (
-                <div
-                  key={dayDate}
-                  className={`aspect-square rounded-sm cursor-pointer flex flex-col items-center justify-center gap-[1px] transition-all hover:ring-1 hover:ring-terminal-blue
-                    ${isToday ? 'ring-1 ring-[#58a6ff]' : ''}`}
-                  style={{ backgroundColor: LEVEL_COLORS[level] }}
-                  title={`${dayDate}: ${count} commits`}
-                  onClick={() => onDayClick?.(dayDate)}
-                >
-                  <span className={`text-[10px] font-mono leading-none ${
-                    count > 0 ? 'text-white/80' : 'text-[#8b949e]/40'
-                  } ${isToday ? 'font-bold text-[#58a6ff]' : ''}`}>
-                    {dayNum}
-                  </span>
-                  {count > 0 && (
-                    <span className="text-[7px] font-mono text-white/50 leading-none">{count}</span>
-                  )}
-                </div>
-              );
-            })}
+                  return (
+                    <div
+                      key={dayDate}
+                      className={`aspect-square rounded-xs cursor-pointer flex flex-col items-center justify-center gap-px transition-all hover:ring-1 hover:ring-terminal-blue
+                        ${isToday ? 'ring-1 ring-[#58a6ff]' : ''}`}
+                      style={{ backgroundColor: info.color }}
+                      title={`${dayDate}: ${formatScreenTimeTitle(sec)}`}
+                      onClick={() => onDayClick?.(dayDate)}
+                    >
+                      <span
+                        className={`text-[10px] font-mono leading-none ${isToday ? 'font-bold' : ''}`}
+                        style={{
+                          color: level === 0 ? (isToday ? '#58a6ff' : '#8b949e') : info.textColor,
+                        }}
+                      >
+                        {dayNum}
+                      </span>
+                      {shortTime && (
+                        <span
+                          className="text-[7.5px] font-mono leading-none tracking-tighter"
+                          style={{
+                            color: info.textColor === '#000000' ? 'rgba(0, 0, 0, 0.85)' : 'rgba(255, 255, 255, 0.9)',
+                            fontWeight: info.textColor === '#000000' ? '600' : 'normal',
+                          }}
+                        >
+                          {shortTime}
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
+        </>
+      )}
 
       {/* 범례 */}
-      <div className="flex items-center justify-end gap-1 mt-3 text-[9px] font-mono text-[#8b949e]/60">
-        <span>Less</span>
-        {LEVEL_COLORS.map((c, i) => (
-          <div key={i} className="w-[10px] h-[10px] rounded-sm" style={{ backgroundColor: c }} />
-        ))}
-        <span>More</span>
-      </div>
+      <GrassLegend />
     </div>
   );
 }
@@ -179,8 +449,22 @@ function MonthCalendar({ year, month, data, onDayClick }: {
 // ────────────────────────────────────────────────
 // 연간 GitHub 스타일 잔디 컴포넌트
 // ────────────────────────────────────────────────
-function YearGraph({ year, data, onDayClick }: { 
-  year: number; data: Record<string, number>; onDayClick?: (date: string) => void 
+function YearGraph({
+  year,
+  data,
+  onDayClick,
+  viewMode,
+  onViewModeChange,
+  onExport,
+  toast,
+}: { 
+  year: number;
+  data: Record<string, number>;
+  onDayClick?: (date: string) => void;
+  viewMode: '2D' | '3D';
+  onViewModeChange: (mode: '2D' | '3D') => void;
+  onExport: (mode: 'share' | 'save') => void;
+  toast: { message: string; isError?: boolean } | null;
 }) {
   const { weeks, monthLabels } = useMemo(() => {
     const startDate = new Date(year, 0, 1);
@@ -222,50 +506,104 @@ function YearGraph({ year, data, onDayClick }: {
     return { weeks: w, monthLabels: mLabels };
   }, [year]);
 
-  return (
-    <div className="bg-[#0d1117] border border-[#30363d] rounded-md p-3 max-w-full overflow-x-auto custom-scrollbar">
-      <div className="text-[#8b949e] text-xs mb-2 pl-2 font-mono">
-        {year} Contributions
-      </div>
-      
-      <div className="relative w-max pl-2">
-        {/* Month Labels */}
-        <div className="relative h-4 mb-1">
-          {monthLabels.map((m, idx) => (
-            <div 
-              key={idx} 
-              className="absolute text-[#8b949e] text-[10px]"
-              style={{ left: m.weekIndex * 14 }}
-            >
-              {m.label}
-            </div>
-          ))}
-        </div>
+  // 3D용 cells 배열 생성
+  const year3DCells = useMemo(() => {
+    if (viewMode !== '3D') return [];
+    const list: GrassCell3D[] = [];
+    weeks.forEach((week, wIdx) => {
+      week.forEach((dayDate, dIdx) => {
+        if (!dayDate) return;
+        const sec = data[dayDate] || 0;
+        list.push({
+          date: dayDate,
+          sec,
+          col: wIdx, // 주 (0 ~ 52)
+          row: dIdx, // 요일 (0 ~ 6)
+        });
+      });
+    });
+    return list;
+  }, [weeks, data, viewMode]);
 
-        {/* Graph Cells */}
-        <div className="flex gap-1 shrink-0 pb-1 w-max">
-          {weeks.map((week, wIdx) => (
-          <div key={`week-${wIdx}`} className="flex flex-col gap-1">
-            {week.map((dayDate, dIdx) => {
-              if (!dayDate) {
-                return <div key={`empty-${wIdx}-${dIdx}`} className="w-[10px] h-[10px] rounded-sm bg-transparent" />;
-              }
-              const count = data[dayDate] || 0;
-              const level = getLevel(count);
-              return (
-                <div 
-                  key={dayDate} 
-                  className="w-[10px] h-[10px] rounded-sm cursor-pointer hover:ring-1 hover:ring-terminal-blue transition-all"
-                  style={{ backgroundColor: LEVEL_COLORS[level] }}
-                  title={`${dayDate}: ${count} commits`}
-                  onClick={() => onDayClick?.(dayDate)}
-                />
-              );
-            })}
-          </div>
-        ))}
+  return (
+    <div className="bg-terminal-bg border border-terminal-border rounded-md p-3 max-w-full">
+      <div className="text-terminal-gray text-xs mb-2 pl-2 pr-1 font-mono flex items-center justify-between">
+        <span>{year} 폰 사용시간</span>
+        <div className="flex items-center gap-1.5">
+          <ViewModeToggle viewMode={viewMode} onChange={onViewModeChange} />
+          <ShareImageButtons onShare={() => onExport('share')} onSave={() => onExport('save')} />
         </div>
       </div>
+
+      {toast && (
+        <div
+          className={`mb-2 mx-2 px-2.5 py-1 text-[11px] font-mono rounded border flex items-center justify-between transition-all ${
+            toast.isError
+              ? 'bg-terminal-red/10 border-terminal-red/40 text-terminal-red'
+              : 'bg-terminal-green/10 border-terminal-green/40 text-terminal-green'
+          }`}
+        >
+          <span>{toast.message}</span>
+        </div>
+      )}
+      
+      {viewMode === '3D' ? (
+        <div className="overflow-x-auto custom-scrollbar pb-1">
+          <Grass3DCanvas
+            cells={year3DCells}
+            tileWidth={14}
+            tileHeight={8}
+            maxBarHeight={36}
+            padding={16}
+            className="my-1 w-max"
+          />
+        </div>
+      ) : (
+        <div className="overflow-x-auto custom-scrollbar pb-1">
+          <div className="relative w-max pl-2">
+            {/* Month Labels */}
+            <div className="relative h-4 mb-1">
+              {monthLabels.map((m, idx) => (
+                <div 
+                  key={idx} 
+                  className="absolute text-terminal-gray text-[10px]"
+                  style={{ left: m.weekIndex * 14 }}
+                >
+                  {m.label}
+                </div>
+              ))}
+            </div>
+
+            {/* Graph Cells */}
+            <div className="flex gap-1 shrink-0 pb-1 w-max">
+              {weeks.map((week, wIdx) => (
+                <div key={`week-${wIdx}`} className="flex flex-col gap-1">
+                  {week.map((dayDate, dIdx) => {
+                    if (!dayDate) {
+                      return <div key={`empty-${wIdx}-${dIdx}`} className="w-[10px] h-[10px] rounded-xs bg-transparent" />;
+                    }
+                    const sec = data[dayDate] || 0;
+                    const level = levelOf(sec);
+                    const color = GRASS_LEVELS[level].color;
+                    return (
+                      <div 
+                        key={dayDate} 
+                        className="w-[10px] h-[10px] rounded-xs cursor-pointer hover:ring-1 hover:ring-terminal-blue transition-all"
+                        style={{ backgroundColor: color }}
+                        title={`${dayDate}: ${formatScreenTimeTitle(sec)}`}
+                        onClick={() => onDayClick?.(dayDate)}
+                      />
+                    );
+                  })}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 범례 */}
+      <GrassLegend />
     </div>
   );
 }

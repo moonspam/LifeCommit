@@ -4,4 +4,6 @@
 <paths xmlns:android="http://schemas.android.com/apk/res/android">
     <cache-path name="backups" path="backups/" />
     <cache-path name="debug_exports" path="debug_exports/" />
+    <cache-path name="share_images" path="share_images/" />
+    <cache-path name="share_media" path="share_media/" />
 </paths>
